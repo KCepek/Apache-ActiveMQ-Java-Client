@@ -74,12 +74,12 @@ public class Consumer implements Runnable, MessageListener {
 				object = objectMessage.getObject();
 				if (object instanceof byte[]) {
 					byte[] array = (byte[]) object;
-					Object[] data = new Object[] { "byte[]", array };
+					Object[] data = new Object[] { "byte[]", Arrays.toString(array), array };
 					((DefaultTableModel) client.getTable().getModel()).addRow(data);
 				}
 				if (object instanceof short[]) {
 					short[] array = (short[]) object;
-					Object[] data = new Object[] { "short[]", array };
+					Object[] data = new Object[] { "short[]", Arrays.toString(array), array };
 					((DefaultTableModel) client.getTable().getModel()).addRow(data);
 				}
 				if (object instanceof int[]) {
@@ -89,27 +89,27 @@ public class Consumer implements Runnable, MessageListener {
 				}
 				if (object instanceof long[]) {
 					long[] array = (long[]) object;
-					Object[] data = new Object[] { "long[]", array };
+					Object[] data = new Object[] { "long[]", Arrays.toString(array), array };
 					((DefaultTableModel) client.getTable().getModel()).addRow(data);
 				}
 				if (object instanceof char[]) {
 					char[] array = (char[]) object;
-					Object[] data = new Object[] { "char[]", array };
+					Object[] data = new Object[] { "char[]", Arrays.toString(array), array };
 					((DefaultTableModel) client.getTable().getModel()).addRow(data);
 				}
 				if (object instanceof float[]) {
 					float[] array = (float[]) object;
-					Object[] data = new Object[] { "float[]", array };
+					Object[] data = new Object[] { "float[]", Arrays.toString(array), array };
 					((DefaultTableModel) client.getTable().getModel()).addRow(data);
 				}
 				if (object instanceof double[]) {
 					double[] array = (double[]) object;
-					Object[] data = new Object[] { "double[]", array };
+					Object[] data = new Object[] { "double[]", Arrays.toString(array), array };
 					((DefaultTableModel) client.getTable().getModel()).addRow(data);
 				}
 				if (object instanceof boolean[]) {
 					boolean[] array = (boolean[]) object;
-					Object[] data = new Object[] { "boolean[]", array };
+					Object[] data = new Object[] { "boolean[]", Arrays.toString(array), array };
 					((DefaultTableModel) client.getTable().getModel()).addRow(data);
 				}
 			} else if (message instanceof TextMessage) {

@@ -1,7 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Set;
 
 import javax.jms.JMSException;
@@ -13,7 +12,7 @@ import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.DestinationSource;
 import org.apache.activemq.command.ActiveMQTopic;
- 
+
 @SuppressWarnings("serial")
 public class Client extends JFrame {
 	// JFrame, JPanel, and Layout
@@ -271,28 +270,9 @@ public class Client extends JFrame {
 					String data = "";
 					String type = (String) table.getModel().getValueAt(row, 0);
 
-					if (table.getModel().getValueAt(row, 1) instanceof byte[]) {
-						data += Arrays.toString((byte[]) table.getModel().getValueAt(row, 1));
-					} else if (table.getModel().getValueAt(row, 1) instanceof short[]) {
-						data += Arrays.toString((short[]) table.getModel().getValueAt(row, 1));
-					} else if (table.getModel().getValueAt(row, 2) instanceof int[]) {
-						data += Arrays.toString((int[]) table.getModel().getValueAt(row, 2));
-						System.out.println(data);
-					} else if (table.getModel().getValueAt(row, 1) instanceof long[]) {
-						data += Arrays.toString((long[]) table.getModel().getValueAt(row, 1));
-					} else if (table.getModel().getValueAt(row, 1) instanceof char[]) {
-						data += Arrays.toString((char[]) table.getModel().getValueAt(row, 1));
-					} else if (table.getModel().getValueAt(row, 1) instanceof float[]) {
-						data += Arrays.toString((float[]) table.getModel().getValueAt(row, 1));
-					} else if (table.getModel().getValueAt(row, 1) instanceof double[]) {
-						data += Arrays.toString((double[]) table.getModel().getValueAt(row, 1));
-					} else if (table.getModel().getValueAt(row, 1) instanceof boolean[]) {
-						data += Arrays.toString((boolean[]) table.getModel().getValueAt(row, 1));
-					} else if (table.getModel().getValueAt(row, 1) instanceof String) {
-						// data += ((String) table.getModel().getValueAt(row,
-						// 1)).replaceAll("(\r\n|\n)", "<br/>");
-						data += ((String) table.getModel().getValueAt(row, 1));
-					} else 
+					// data += table.getModel().getValueAt(row,
+					// 1).replaceAll("(\r\n|\n)", "<br/>");
+					data += table.getModel().getValueAt(row, 1);
 
 					displayMessageDialog(data, type);
 				}
