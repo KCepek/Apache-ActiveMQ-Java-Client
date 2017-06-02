@@ -1,0 +1,30 @@
+<project default="main">
+	<target name="main" depends="clear,compile,jar">
+	</target>
+
+	<target name="clear">
+		<delete includeemptydirs="true">
+			<fileset dir="../bin" includes="**/*" />
+		</delete>
+	</target>
+
+	<target name="compile">
+		<javac srcdir="../src" destdir="../bin" classpath="C:/Users/Kyle/Desktop/JLab/apache-activemq-5.14.5/activemq-all-5.14.5.jar" />
+	</target>
+
+	<target name="jar">
+		<jar destfile="../JMS.jar">
+			<fileset dir="../bin">
+				<include name="**/*.class" />
+			</fileset>
+			<zipgroupfileset dir="C:/Users/Kyle/Desktop/JLab/apache-activemq-5.14.5" includes="activemq-all-5.14.5.jar" />
+			<manifest>
+				<attribute name="Main-Class" value="Main" />
+				<section name="Information">
+					<attribute name="Affiliation" value="Jefferson Lab" />
+					<attribute name="Date" value="May 9, 2017" />
+				</section>
+			</manifest>
+		</jar>
+	</target>
+</project>
