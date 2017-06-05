@@ -1,6 +1,5 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 import javax.jms.JMSException;
@@ -324,8 +323,7 @@ public class Client extends JFrame {
 						if (dataType.getText().equals("Data Type: String")) {
 							producer.sendTextMessage(sendText.getText());
 						} else {
-							// Parse the text to decide what type of array to
-							// send
+							// Parse the text to decide what type of primitives to send
 							String[] array = sendText.getText().split("\\s+");
 
 							if (!array[0].equals("byte") && !array[0].equals("short") && !array[0].equals("int")
@@ -333,57 +331,59 @@ public class Client extends JFrame {
 									&& !array[0].equals("double") && !array[0].equals("boolean")
 									&& !array[0].equals("bool")) {
 								displayMessageDialog(
-										"\"" + array[0] + "\" is not a valid primitive array type.\n"
+										"\"" + array[0] + "\" is not a valid primitive type.\n"
 												+ "Please enter the type of the array as either byte, short, int, long, char, float, double, or bool (boolean).",
 										"Error");
 							} else {
-								// Parse arrays here and check that all types
-								// match
+								// Parse primitives here and check that all types match
 								if (array[0].equals("byte")) {
-									byte[] arrayN = sendText.getText().substring(5).getBytes(StandardCharsets.UTF_8);
-									producer.sendByteArray(arrayN);
+									byte[] arrayN = new byte[array.length - 2];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Byte.parseByte(array[i + 2]);
+									}
+									producer.sendByteStream(Integer.parseInt(array[1]), arrayN);
 								} else if (array[0].equals("short")) {
-									short[] arrayN = new short[array.length - 1];
-									for (int i = 1; i < array.length; i++) {
-										arrayN[i - 1] = Short.parseShort(array[i]);
+									short[] arrayN = new short[array.length - 2];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Short.parseShort(array[i + 2]);
 									}
-									producer.sendShortArray(arrayN);
+									producer.sendShortStream(Integer.parseInt(array[1]), arrayN);
 								} else if (array[0].equals("int")) {
-									int[] arrayN = new int[array.length - 1];
-									for (int i = 1; i < array.length; i++) {
-										arrayN[i - 1] = Integer.parseInt(array[i]);
+									int[] arrayN = new int[array.length - 2];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Integer.parseInt(array[i + 2]);
 									}
-									producer.sendIntArray(arrayN);
+									producer.sendIntStream(Integer.parseInt(array[1]), arrayN);
 								} else if (array[0].equals("long")) {
-									long[] arrayN = new long[array.length - 1];
-									for (int i = 1; i < array.length; i++) {
-										arrayN[i - 1] = Long.parseLong(array[i]);
+									long[] arrayN = new long[array.length - 2];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Long.parseLong(array[i + 2]);
 									}
-									producer.sendLongArray(arrayN);
+									producer.sendLongStream(Integer.parseInt(array[1]), arrayN);
 								} else if (array[0].equals("char")) {
-									char[] arrayN = new char[array.length - 1];
-									for (int i = 1; i < array.length; i++) {
-										arrayN[i - 1] = array[i].charAt(0);
+									char[] arrayN = new char[array.length - 2];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = array[i + 2].charAt(0);
 									}
-									producer.sendCharArray(arrayN);
+									producer.sendCharStream(Integer.parseInt(array[1]), arrayN);
 								} else if (array[0].equals("float")) {
-									float[] arrayN = new float[array.length - 1];
-									for (int i = 1; i < array.length; i++) {
-										arrayN[i - 1] = Float.parseFloat(array[i]);
+									float[] arrayN = new float[array.length - 2];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Float.parseFloat(array[i + 2]);
 									}
-									producer.sendFloatArray(arrayN);
+									producer.sendFloatStream(Integer.parseInt(array[1]), arrayN);
 								} else if (array[0].equals("double")) {
-									double[] arrayN = new double[array.length - 1];
-									for (int i = 1; i < array.length; i++) {
-										arrayN[i - 1] = Double.parseDouble(array[i]);
+									double[] arrayN = new double[array.length - 2];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Double.parseDouble(array[i + 2]);
 									}
-									producer.sendDoubleArray(arrayN);
+									producer.sendDoubleStream(Integer.parseInt(array[1]), arrayN);
 								} else if (array[0].equals("boolean") || array[0].equals("bool")) {
-									boolean[] arrayN = new boolean[array.length - 1];
-									for (int i = 1; i < array.length; i++) {
-										arrayN[i - 1] = Boolean.parseBoolean(array[i]);
+									boolean[] arrayN = new boolean[array.length - 2];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Boolean.parseBoolean(array[i + 2]);
 									}
-									producer.sendBooleanArray(arrayN);
+									producer.sendBooleanStream(Integer.parseInt(array[1]), arrayN);
 								}
 							}
 
@@ -474,10 +474,6 @@ public class Client extends JFrame {
 		pane.add(cards, BorderLayout.CENTER);
 	}
 
-	/**
-	 * Create the GUI and show it. For thread safety, this method should be
-	 * invoked from the event dispatch thread.
-	 */
 	private void createAndDisplayGUI() {
 		// Create and set up the window.
 		frame = new JFrame("Client");
@@ -538,24 +534,10 @@ public class Client extends JFrame {
 		}
 	}
 
-	private void displayMessageDialog(String message, String title) {
+	protected void displayMessageDialog(String message, String title) {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				// String messageEscaped = "";
-				// String[] predecessors = new String[] { "&", "<", ">", "\"",
-				// "'", "/", "A" };
-				// String[] replacers = new String[] { "&amp;", "&lt;", "&gt;",
-				// "&quot;", "&#x27;", "&#x2F;",
-				// "TEST YES IT WORKS" };
-				// for (int i = 0; i < predecessors.length; i++) {
-				// messageEscaped = message.replaceAll(predecessors[i],
-				// replacers[i]);
-				// }
-
-				// JOptionPane.showMessageDialog(new JLabel(), "<html><body><p
-				// style='width: 500px;'>" + messageEscaped +
-				// "</p></body></html>", title, JOptionPane.PLAIN_MESSAGE);
 				JTextPane textArea = new JTextPane();
 				textArea.setText(message);
 				textArea.setEditable(false);

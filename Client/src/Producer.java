@@ -1,11 +1,10 @@
 import org.apache.activemq.ActiveMQConnectionFactory;
 
 import javax.jms.Connection;
-import javax.jms.DeliveryMode;
 import javax.jms.JMSException;
 import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
 import javax.jms.Session;
+import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
  
@@ -57,53 +56,77 @@ public class Producer implements Runnable {
 	public void closeConnection() throws JMSException {
 		connection.close();
 	}
-
-	public void sendByteArray(byte[] array) throws JMSException {
-		ObjectMessage objectMessage = session.createObjectMessage(array);
-		objectMessage.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
-		messageProducer.send(objectMessage);
+	
+	public void sendByteStream(int size, byte... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for(byte arg : args) {
+			message.writeByte(arg);
+		}
+		messageProducer.send(message);
 	}
-
-	public void sendShortArray(short[] array) throws JMSException {
-		ObjectMessage objectMessage = session.createObjectMessage(array);
-		objectMessage.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
-		messageProducer.send(objectMessage);
+	
+	public void sendShortStream(int size, short... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for(short arg : args) {
+			message.writeShort(arg);
+		}
+		messageProducer.send(message);
 	}
-
-	public void sendIntArray(int[] array) throws JMSException {
-		ObjectMessage objectMessage = session.createObjectMessage(array);
-		objectMessage.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
-		messageProducer.send(objectMessage);
+	
+	public void sendIntStream(int size, int... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for(int arg : args) {
+			message.writeInt(arg);
+		}
+		messageProducer.send(message);
 	}
-
-	public void sendLongArray(long[] array) throws JMSException {
-		ObjectMessage objectMessage = session.createObjectMessage(array);
-		objectMessage.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
-		messageProducer.send(objectMessage);
+	
+	public void sendLongStream(int size, long... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for(long arg : args) {
+			message.writeLong(arg);
+		}
+		messageProducer.send(message);
 	}
-
-	public void sendCharArray(char[] array) throws JMSException {
-		ObjectMessage objectMessage = session.createObjectMessage(array);
-		objectMessage.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
-		messageProducer.send(objectMessage);
+	
+	public void sendCharStream(int size, char... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for(char arg : args) {
+			message.writeChar(arg);
+		}
+		messageProducer.send(message);
 	}
-
-	public void sendFloatArray(float[] array) throws JMSException {
-		ObjectMessage objectMessage = session.createObjectMessage(array);
-		objectMessage.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
-		messageProducer.send(objectMessage);
+	
+	public void sendFloatStream(int size, float... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for(float arg : args) {
+			message.writeFloat(arg);
+		}
+		messageProducer.send(message);
 	}
-
-	public void sendDoubleArray(double[] array) throws JMSException {
-		ObjectMessage objectMessage = session.createObjectMessage(array);
-		objectMessage.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
-		messageProducer.send(objectMessage);
+	
+	public void sendDoubleStream(int size, double... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for(double arg : args) {
+			message.writeDouble(arg);
+		}
+		messageProducer.send(message);
 	}
-
-	public void sendBooleanArray(boolean[] array) throws JMSException {
-		ObjectMessage objectMessage = session.createObjectMessage(array);
-		objectMessage.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
-		messageProducer.send(objectMessage);
+	
+	public void sendBooleanStream(int size, boolean... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for(boolean arg : args) {
+			message.writeBoolean(arg);
+		}
+		messageProducer.send(message);
 	}
 
 	public void sendTextMessage(String s) throws JMSException {
