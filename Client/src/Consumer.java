@@ -10,7 +10,6 @@ import javax.jms.Session;
 import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
-import javax.swing.table.DefaultTableModel;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -70,168 +69,48 @@ public class Consumer implements Runnable, MessageListener {
 	public void onMessage(Message message) {
 		try {
 			if (message instanceof StreamMessage) {
-				StreamMessage src = (StreamMessage) message;
-				Object lastRead = null;
+				StreamMessage streamMessage = (StreamMessage) message;
+				Object[] values = null;
+				boolean oneType = true;
+				boolean hasType = false;
 				Object type = null;
-				int count = -1;
+				int check = 0;
 				int size = 0;
-
-				byte[] arrayByte = null;
-				short[] arrayShort = null;
-				int[] arrayInt = null;
-				long[] arrayLong = null;
-				char[] arrayChar = null;
-				float[] arrayFloat = null;
-				double[] arrayDouble = null;
-				boolean[] arrayBoolean = null;
-
+				
 				try {
-					// Get the size and type (first variable) of array to store
-					do {
-						lastRead = src.readObject();
-						if (lastRead != null) {
-							if (count == -1) {
-								size = (int) lastRead;
-							} else if (count == 0) {
-								type = lastRead;
-							}
-							count++;
+					// Get the size of the StreamMessage data
+					size = (int) streamMessage.readObject();
+					values = new Object[size];
+					
+					for (int i = 0; i < size; i++) {
+						values[i] = streamMessage.readObject();
+						if (values[i] == null && !hasType) {
+							check++;
 						}
-					} while (lastRead != null && count < 1);
-
-					// Get the array data for the given type
-					if (type instanceof Byte) {
-						arrayByte = new byte[size];
-						arrayByte[0] = (byte) type;
-						do {
-							lastRead = src.readObject();
-							if (lastRead != null) {
-								arrayByte[count] = (byte) lastRead;
-								count++;
+						if (i == check) {
+							type = values[0];
+							hasType = true;
+						} else {
+							if ( values[i] != null && !type.getClass().equals(values[i].getClass()) ) {
+								oneType = false;
 							}
-						} while (lastRead != null);
-
-					} else if (type instanceof Short) {
-						arrayShort = new short[size];
-						arrayShort[0] = (short) type;
-						do {
-							lastRead = src.readObject();
-							if (lastRead != null) {
-								arrayShort[count] = (short) lastRead;
-								count++;
-							}
-						} while (lastRead != null);
-
-					} else if (type instanceof Integer) {
-						arrayInt = new int[size];
-						arrayInt[0] = (int) type;
-						do {
-							lastRead = src.readObject();
-							if (lastRead != null) {
-								arrayInt[count] = (int) lastRead;
-								count++;
-							}
-						} while (lastRead != null);
-
-					} else if (type instanceof Long) {
-						arrayLong = new long[size];
-						arrayLong[0] = (long) type;
-						do {
-							lastRead = src.readObject();
-							if (lastRead != null) {
-								arrayLong[count] = (int) lastRead;
-								count++;
-							}
-						} while (lastRead != null);
-
-					} else if (type instanceof Character) {
-						arrayChar = new char[size];
-						arrayChar[0] = (char) type;
-						do {
-							lastRead = src.readObject();
-							if (lastRead != null) {
-								arrayChar[count] = (char) lastRead;
-								count++;
-							}
-						} while (lastRead != null);
-
-					} else if (type instanceof Float) {
-						arrayFloat = new float[size];
-						arrayFloat[0] = (float) type;
-						do {
-							lastRead = src.readObject();
-							if (lastRead != null) {
-								arrayFloat[count] = (float) lastRead;
-								count++;
-							}
-						} while (lastRead != null);
-
-					} else if (type instanceof Double) {
-						arrayDouble = new double[size];
-						arrayDouble[0] = (double) type;
-						do {
-							lastRead = src.readObject();
-							if (lastRead != null) {
-								arrayDouble[count] = (double) lastRead;
-								count++;
-							}
-						} while (lastRead != null);
-
-					} else if (type instanceof Boolean) {
-						arrayBoolean = new boolean[size];
-						arrayBoolean[0] = (boolean) type;
-						do {
-							lastRead = src.readObject();
-							if (lastRead != null) {
-								arrayBoolean[count] = (boolean) lastRead;
-								count++;
-							}
-						} while (lastRead != null);
-
+						}
 					}
-				} catch (java.lang.ArrayIndexOutOfBoundsException err) {
-					client.displayMessageDialog("The array size was set too small.", "Error");
+					
+					fillClientTable(values, type, oneType);
 				} catch (MessageEOFException noMoreData) {
-					// Unfortunately, there is no method to peek at the next bit
-					// of stream data for a StreamMessage in Java, so the
-					// exception will have to be used
-
-					// Add the stream that isn't null to the table as an array
-					if (arrayByte != null) {
-						Object[] data = new Object[] { "byte[]", Arrays.toString(arrayByte), arrayByte };
-						((DefaultTableModel) client.getTable().getModel()).addRow(data);
-					} else if (arrayShort != null) {
-						Object[] data = new Object[] { "short[]", Arrays.toString(arrayShort), arrayShort };
-						((DefaultTableModel) client.getTable().getModel()).addRow(data);
-					} else if (arrayInt != null) {
-						Object[] data = new Object[] { "int[]", Arrays.toString(arrayInt), arrayInt };
-						((DefaultTableModel) client.getTable().getModel()).addRow(data);
-					} else if (arrayLong != null) {
-						Object[] data = new Object[] { "long[]", Arrays.toString(arrayLong), arrayLong };
-						((DefaultTableModel) client.getTable().getModel()).addRow(data);
-					} else if (arrayChar != null) {
-						Object[] data = new Object[] { "char[]", Arrays.toString(arrayChar), arrayChar };
-						((DefaultTableModel) client.getTable().getModel()).addRow(data);
-					} else if (arrayFloat != null) {
-						Object[] data = new Object[] { "float[]", Arrays.toString(arrayFloat), arrayFloat };
-						((DefaultTableModel) client.getTable().getModel()).addRow(data);
-					} else if (arrayDouble != null) {
-						Object[] data = new Object[] { "double[]", Arrays.toString(arrayDouble), arrayDouble };
-						((DefaultTableModel) client.getTable().getModel()).addRow(data);
-					} else if (arrayBoolean != null) {
-						Object[] data = new Object[] { "boolean[]", Arrays.toString(arrayBoolean), arrayBoolean };
-						((DefaultTableModel) client.getTable().getModel()).addRow(data);
-					}
+					fillClientTable(values, type, oneType);
 				}
-
 			} else if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;
 				String text = textMessage.getText();
 				Object[] data = new Object[] { "String", text };
-				((DefaultTableModel) client.getTable().getModel()).addRow(data);
+				client.insertData(data);
 			}
-		} catch (JMSException e) {
-			System.out.println(e.getStackTrace());
+		} catch (JMSException err) {
+			String error = "Caught while receiving data from the Consumer:\n\n" + err + "\n";
+			error += err.getStackTrace();
+			client.displayMessageDialog(error, "Error");
 		}
 	}
 
@@ -242,5 +121,78 @@ public class Consumer implements Runnable, MessageListener {
 
 	public void closeConnection() throws JMSException {
 		connection.close();
+	}
+	
+	public void fillClientTable(Object[] values, Object type, boolean oneType) {
+		if (oneType) {
+			int sizeN = values.length;
+			if (type instanceof Byte) {
+				byte[] valuesN = new byte[sizeN];
+				for (int i = 0; i < sizeN; i++) {
+					if (values[i] != null) {
+						valuesN[i] = (byte) values[i];
+					}
+				}
+				client.insertData(new Object[] { "byte[]", Arrays.toString(valuesN), valuesN });
+			} else if (type instanceof Short) {
+				short[] valuesN = new short[values.length];
+				for (int i = 0; i < sizeN; i++) {
+					if (values[i] != null) {
+						valuesN[i] = (short) values[i];
+					}
+				}
+				client.insertData(new Object[] { "short[]", Arrays.toString(valuesN), valuesN });
+			} else if (type instanceof Integer) {
+				int[] valuesN = new int[values.length];
+				for (int i = 0; i < sizeN; i++) {
+					if (values[i] != null) {
+						valuesN[i] = (int) values[i];
+					}
+				}
+				client.insertData(new Object[] { "int[]", Arrays.toString(valuesN), valuesN });
+			} else if (type instanceof Long) {
+				long[] valuesN = new long[values.length];
+				for (int i = 0; i < sizeN; i++) {
+					if (values[i] != null) {
+						valuesN[i] = (long) values[i];
+					}
+				}
+				client.insertData(new Object[] { "long[]", Arrays.toString(valuesN), valuesN });
+			} else if (type instanceof Character) {
+				char[] valuesN = new char[values.length];
+				for (int i = 0; i < sizeN; i++) {
+					if (values[i] != null) {
+						valuesN[i] = (char) values[i];
+					}
+				}
+				client.insertData(new Object[] { "char[]", Arrays.toString(valuesN), valuesN });
+			} else if (type instanceof Float) {
+				float[] valuesN = new float[values.length];
+				for (int i = 0; i < sizeN; i++) {
+					if (values[i] != null) {
+						valuesN[i] = (float) values[i];
+					}
+				}
+				client.insertData(new Object[] { "float[]", Arrays.toString(valuesN), valuesN });
+			} else if (type instanceof Double) {
+				double[] valuesN = new double[values.length];
+				for (int i = 0; i < sizeN; i++) {
+					if (values[i] != null) {
+						valuesN[i] = (double) values[i];
+					}
+				}
+				client.insertData(new Object[] { "double[]", Arrays.toString(valuesN), valuesN });
+			} else if (type instanceof Boolean) {
+				boolean[] valuesN = new boolean[values.length];
+				for (int i = 0; i < sizeN; i++) {
+					if (values[i] != null) {
+						valuesN[i] = (boolean) values[i];
+					}
+				}
+				client.insertData(new Object[] { "boolean[]", Arrays.toString(valuesN), valuesN });
+			}
+		} else {
+			client.insertData(new Object[] { "Object[]", Arrays.toString(values), values });
+		}
 	}
 }

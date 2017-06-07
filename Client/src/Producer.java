@@ -57,6 +57,31 @@ public class Producer implements Runnable {
 		connection.close();
 	}
 	
+	public void sendMixedStream(int size, Object... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for (Object arg : args) {
+			if (arg instanceof Byte) {
+				message.writeByte((byte) arg);
+			} else if (arg instanceof Short) {
+				message.writeShort((short) arg);
+			} else if (arg instanceof Integer) {
+				message.writeInt((int) arg);
+			} else if (arg instanceof Long) {
+				message.writeLong((long) arg);
+			} else if (arg instanceof Character) {
+				message.writeChar((char) arg);
+			} else if (arg instanceof Float) {
+				message.writeFloat((float) arg);
+			} else if (arg instanceof Double) {
+				message.writeDouble((double) arg);
+			} else if (arg instanceof Boolean) {
+				message.writeBoolean((boolean) arg);
+			}
+		}
+		messageProducer.send(message);
+	}
+	
 	public void sendByteStream(int size, byte... args) throws JMSException {
 		StreamMessage message = session.createStreamMessage();
 		message.writeInt(size);
@@ -133,11 +158,5 @@ public class Producer implements Runnable {
 		TextMessage textMessage = session.createTextMessage(s);
 		// textMessage.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
 		messageProducer.send(textMessage);
-	}
-
-	public static void main(String[] args) throws Exception {
-		// Thread t = new Thread(new Event(info[i]));
-		// t.setDaemon(false);
-		// t.start();
 	}
 }
