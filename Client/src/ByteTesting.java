@@ -1,5 +1,3 @@
-
-
 /**
  * This class demonstrates the structure of byte arrays used via Apache ActiveMQ
  * and how to decode ActiveMQ's byte arrays. ActiveMQ's byte arrays are encoded
@@ -178,7 +176,7 @@ public class ByteTesting {
 	 *            - a byte array.
 	 * @param offset
 	 *            - how much the first significant byte is offset in the byte
-	 *            array if the length of the array is greater than 8
+	 *            array if the length of the array is greater than 8.
 	 * @return
 	 */
 	public static double bytesToDouble8(byte[] bytes, int offset) {
@@ -198,7 +196,7 @@ public class ByteTesting {
 	 *            - a byte array.
 	 * @param offset
 	 *            - how much the first significant byte is offset in the byte
-	 *            array if the length of the array is greater than 8
+	 *            array if the length of the array is greater than 1.
 	 * @return
 	 */
 	public static boolean bytesToBoolean1(byte[] bytes, int offset) {
