@@ -152,7 +152,7 @@ public class Client extends JFrame {
 						// Initialize Session
 						session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-						// Get all Topic Destinations
+						// Get all Destinations
 						ds = connection.getDestinationSource();
 						topics = ds.getTopics();
 						queues = ds.getQueues();
@@ -308,7 +308,7 @@ public class Client extends JFrame {
 			}
 		});
 
-		// Creates a new Topic
+		// Creates a new Topic or Queue
 		destinationCreate.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -476,7 +476,7 @@ public class Client extends JFrame {
 						displayMessageDialog(error, "Error");
 					}
 				} else {
-					displayMessageDialog("No Topic is selected. Please create or select a Topic.", "Requirements");
+					displayMessageDialog("No Topic or Queue is selected. Please create or select a Topic or Queue.", "Requirements");
 				}
 
 				// checkScroll();
@@ -513,7 +513,7 @@ public class Client extends JFrame {
 						
 						consumer.run();
 					} else {
-						displayMessageDialog("No Topic is selected.  Please create or select a Topic.", "Requirements");
+						displayMessageDialog("No Topic or Queue is selected.  Please create or select a Topic or Queue.", "Requirements");
 					}
 				}
 			}

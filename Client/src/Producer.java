@@ -45,7 +45,7 @@ public class Producer implements Runnable {
 			// Create a Session
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-			// Create the Queue or Topics to send messages to
+			// Create the Topic or Queue to send messages to
 			if (useTopics) {
 				destination = session.createTopic(destinationName);
 			} else {
