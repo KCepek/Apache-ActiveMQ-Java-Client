@@ -3,7 +3,6 @@ import java.util.Arrays;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
@@ -127,6 +126,21 @@ public class Consumer implements Runnable, MessageListener {
 				}
 			} else if (message instanceof BytesMessage) {
 				BytesMessage bytesMessage = (BytesMessage) message;
+				byte[] values = null;
+				long length = 0;
+				
+				try {
+					length = bytesMessage.getBodyLength();
+					values = new byte[(int) length];
+					
+					bytesMessage.readBytes(values);
+
+					client.insertData(new Object[] { "byte[]", Arrays.toString(values), values });
+				} catch (MessageEOFException noMoreData) {
+					String error = "Caught while receiving data from the Consumer:\n\n" + noMoreData + "\n";
+					error += noMoreData.getStackTrace();
+					client.displayMessageDialog(error, "Error");
+				}
 
 			} else if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;

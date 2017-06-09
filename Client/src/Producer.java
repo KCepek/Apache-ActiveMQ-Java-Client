@@ -167,7 +167,7 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 	
-	public void sendBytesMessage(int size, Object... args) throws JMSException {
+	public void sendMixedBytesMessage(int size, Object... args) throws JMSException {
 		BytesMessage message = session.createBytesMessage();
 		message.writeInt(size);
 		for (Object arg : args) {
@@ -192,7 +192,7 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 	
-	public void sendBytesMessage(int size, byte... args) throws JMSException {
+	public void sendByteBytesMessage(int size, byte... args) throws JMSException {
 		BytesMessage message = session.createBytesMessage();
 		message.writeInt(size);
 		for(byte arg : args) {
@@ -201,7 +201,7 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 	
-	public void sendBytesMessage(int size, short... args) throws JMSException {
+	public void sendShortBytesMessage(int size, short... args) throws JMSException {
 		BytesMessage message = session.createBytesMessage();
 		message.writeInt(size);
 		for(short arg : args) {
@@ -210,7 +210,7 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 	
-	public void sendBytesMessage(int size, int... args) throws JMSException {
+	public void sendIntBytesMessage(int size, int... args) throws JMSException {
 		BytesMessage message = session.createBytesMessage();
 		message.writeInt(size);
 		for(int arg : args) {
@@ -219,7 +219,7 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 	
-	public void sendBytesMessage(int size, long... args) throws JMSException {
+	public void sendLongBytesMessage(int size, long... args) throws JMSException {
 		BytesMessage message = session.createBytesMessage();
 		message.writeInt(size);
 		for(long arg : args) {
@@ -228,7 +228,7 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 	
-	public void sendBytesMessage(int size, char... args) throws JMSException {
+	public void sendCharBytesMessage(int size, char... args) throws JMSException {
 		BytesMessage message = session.createBytesMessage();
 		message.writeInt(size);
 		for(char arg : args) {
@@ -237,7 +237,7 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 	
-	public void sendBytesMessage(int size, float... args) throws JMSException {
+	public void sendFloatBytesMessage(int size, float... args) throws JMSException {
 		BytesMessage message = session.createBytesMessage();
 		message.writeInt(size);
 		for(float arg : args) {
@@ -246,7 +246,7 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 	
-	public void sendBytesMessage(int size, double... args) throws JMSException {
+	public void sendDoubleBytesMessage(int size, double... args) throws JMSException {
 		BytesMessage message = session.createBytesMessage();
 		message.writeInt(size);
 		for(double arg : args) {
@@ -255,7 +255,7 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 	
-	public void sendBytesMessage(int size, boolean... args) throws JMSException {
+	public void sendBooleanBytesMessage(int size, boolean... args) throws JMSException {
 		BytesMessage message = session.createBytesMessage();
 		message.writeInt(size);
 		for(boolean arg : args) {

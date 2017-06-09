@@ -269,7 +269,8 @@ public class Client extends JFrame {
 				String dataTypes = "--MESSAGE TYPES--\n"
 						+ "Text -> This will send a String of all text in the text box in the form of a TextMessage.\n\n"
 						+ "Stream (One Type) -> First enter the primitive data type that will be sent.  The type can be either a byte, short, int, long, char, float, double, or bool (boolean).  Next, enter the amount of data to be sent followed by the data.  If the amount of data provided is less than the length, then the empty data will be filled in with the data type's equivalent of zero.\n\n"
-						+ "Stream (Mixed Type) -> This follows the same rules as arrays of one type, except mix (mixed) is entered instead of the primitive type followed by the size of the data.  The primitive type is then written in front of each piece of data to specify what type the data should be.\n\n"
+						+ "Stream (Mixed Type) -> This follows the same rules as stream messages of one type, except mix (mixed) is entered instead of the primitive type followed by the size of the data.  The primitive type is then written in front of each piece of data to specify what type the data should be.\n\n"
+						+ "Byte -> This follows the same rules as a StreamMessage; however, the data received is represented by a byte array with no type information attached to dissociate different data types.  The task of reading data from the received byte array is left to the user.\n\n"
 						+ "    *Examples*\n      int 6 4 3 23 6 3 298\n          -> [4, 3, 23, 6, 3, 298]\n\n      int 4 3 2\n          -> [3, 2, 0, 0]\n\n      bool 4 true false 89fj TruE\n          -> [true, false, false, true]\n\n      char 3 f 8 a\n          -> [f, 8, a]\n\n      mix 5 int 4 bool true char f byte 2 double 32.38\n          -> [4, true, f, 2, 32.38]\n\n      mix 3 int 1 long 9283928\n          -> [1, 9283928, null]";
 
 				displayMessageDialog(general + "\n\n\n" + dataTypes, "How to Use");
@@ -459,7 +460,103 @@ public class Client extends JFrame {
 								}
 							}
 						} else if (dataType.getText().equals("Message Type: Byte")) {
-							
+							// Parse the text to decide what type of primitives
+							// to send
+							String[] array = sendText.getText().split("\\s+");
+							String type = array[0].toLowerCase();
+
+							if (!type.equals("byte") && !type.equals("short") && !type.equals("int")
+									&& !type.equals("long") && !type.equals("char") && !type.equals("float")
+									&& !type.equals("double") && !type.equals("boolean") && !type.equals("bool")
+									&& !type.equals("mixed") && !type.equals("mix")) {
+								displayMessageDialog(
+										"\"" + type + "\" is not a valid primitive type.\n"
+												+ "Please enter the type of the array as either a primitive type: byte, short, int, long, char, float, double, or bool (boolean), or as a mixed type: mix (mixed).",
+										"Error");
+							} else {
+								// Parse primitives here and check that all
+								// types match
+								int size = Integer.parseInt(array[1]);
+
+								if (type.equals("byte")) {
+									byte[] arrayN = new byte[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Byte.parseByte(array[i + 2]);
+									}
+									producer.sendByteBytesMessage(size, arrayN);
+								} else if (type.equals("short")) {
+									short[] arrayN = new short[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Short.parseShort(array[i + 2]);
+									}
+									producer.sendShortBytesMessage(size, arrayN);
+								} else if (type.equals("int")) {
+									int[] arrayN = new int[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Integer.parseInt(array[i + 2]);
+									}
+									producer.sendIntBytesMessage(size, arrayN);
+								} else if (type.equals("long")) {
+									long[] arrayN = new long[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Long.parseLong(array[i + 2]);
+									}
+									producer.sendLongBytesMessage(size, arrayN);
+								} else if (type.equals("char")) {
+									char[] arrayN = new char[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = array[i + 2].charAt(0);
+									}
+									producer.sendCharBytesMessage(size, arrayN);
+								} else if (type.equals("float")) {
+									float[] arrayN = new float[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Float.parseFloat(array[i + 2]);
+									}
+									producer.sendFloatBytesMessage(size, arrayN);
+								} else if (type.equals("double")) {
+									double[] arrayN = new double[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Double.parseDouble(array[i + 2]);
+									}
+									producer.sendDoubleBytesMessage(size, arrayN);
+								} else if (type.equals("boolean") || type.equals("bool")) {
+									boolean[] arrayN = new boolean[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Boolean.parseBoolean(array[i + 2]);
+									}
+									producer.sendBooleanBytesMessage(size, arrayN);
+								} else if (type.equals("mixed") || type.equals("mix")) {
+									Object[] arrayN = new Object[size];
+									String typeMix = "";
+									int adjustment = 0;
+									for (int i = 0; i < array.length - 2; i++) {
+										if (i % 2 == 0) {
+											typeMix = array[i + 2];
+											adjustment++;
+										} else {
+											if (typeMix.equals("byte")) {
+												arrayN[i - adjustment] = Byte.parseByte(array[i + 2]);
+											} else if (typeMix.equals("short")) {
+												arrayN[i - adjustment] = Short.parseShort(array[i + 2]);
+											} else if (typeMix.equals("int")) {
+												arrayN[i - adjustment] = Integer.parseInt(array[i + 2]);
+											} else if (typeMix.equals("long")) {
+												arrayN[i - adjustment] = Long.parseLong(array[i + 2]);
+											} else if (typeMix.equals("char")) {
+												arrayN[i - adjustment] = "" + array[i + 2].charAt(0);
+											} else if (typeMix.equals("float")) {
+												arrayN[i - adjustment] = Float.parseFloat(array[i + 2]);
+											} else if (typeMix.equals("double")) {
+												arrayN[i - adjustment] = Double.parseDouble(array[i + 2]);
+											} else if (typeMix.equals("boolean") || typeMix.equalsIgnoreCase("bool")) {
+												arrayN[i - adjustment] = Boolean.parseBoolean(array[i + 2]);
+											}
+										}
+									}
+									producer.sendMixedBytesMessage(size, arrayN);
+								}
+							}
 						}
 
 						producer.closeConnection();
