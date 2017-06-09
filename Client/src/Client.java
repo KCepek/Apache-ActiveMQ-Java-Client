@@ -21,7 +21,8 @@ public class Client extends JFrame {
 	private CardLayout cardLayout = null;
 
 	// Defaults
-	private String defaultURL = "tcp://localhost";
+	//private String defaultURL = "tcp://localhost";
+	private String defaultURL = "tcp://clondaq6.jlab.org";
 	private int defaultPort = 61616;
 
 	// GUI Components - card1
@@ -47,6 +48,11 @@ public class Client extends JFrame {
 	private JButton refresh = null;
 	private JButton disconnect = null;
 
+	// Table Scroll Parameters
+	private int extent = 0;
+	private int maximum = 0;
+	private int value = 0;
+
 	// Connection Parameters
 	private String addressText = null;
 	private ActiveMQConnectionFactory connectionFactory = null;
@@ -61,6 +67,18 @@ public class Client extends JFrame {
 
 	public void insertData(Object[] data) {
 		((DefaultTableModel) table.getModel()).addRow(data);
+	}
+
+	public void setExtent(int extent) {
+		this.extent = extent;
+	}
+
+	public void setMaximum(int maximum) {
+		this.maximum = maximum;
+	}
+
+	public void setValue(int value) {
+		this.value = value;
 	}
 
 	public void addComponentToPane(Container pane) {
@@ -221,7 +239,7 @@ public class Client extends JFrame {
 
 		// Add components
 		constraints2.anchor = GridBagConstraints.CENTER;
-		
+
 		constraints2.gridx = 1;
 		constraints2.gridy = 0;
 		constraints2.fill = GridBagConstraints.HORIZONTAL;
@@ -293,7 +311,15 @@ public class Client extends JFrame {
 				}
 			}
 		});
-		
+
+		table.addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				if (extent == maximum - value) {
+					table.scrollRectToVisible(table.getCellRect(table.getRowCount() - 1, 0, true));
+				}
+			}
+		});
+
 		destinationType.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -356,7 +382,7 @@ public class Client extends JFrame {
 							producer = new Producer(addressText, clientID.getText() + " - Producer",
 									"Q" + destinationSelect.getSelectedItem().toString());
 						}
-						
+
 						producer.run();
 
 						if (dataType.getText().equals("Message Type: Text")) {
@@ -573,10 +599,9 @@ public class Client extends JFrame {
 						displayMessageDialog(error, "Error");
 					}
 				} else {
-					displayMessageDialog("No Topic or Queue is selected. Please create or select a Topic or Queue.", "Requirements");
+					displayMessageDialog("No Topic or Queue is selected. Please create or select a Topic or Queue.",
+							"Requirements");
 				}
-
-				// checkScroll();
 			}
 		});
 
@@ -602,15 +627,19 @@ public class Client extends JFrame {
 
 						if (destinationType.getText().equals("Use: Topics")) {
 							consumer = new Consumer(addressText, clientID.getText() + " - Consumer",
-									"T" + destinationSelect.getSelectedItem().toString(), clientID.getText(), Client.this);
+									"T" + destinationSelect.getSelectedItem().toString(), clientID.getText(),
+									Client.this);
 						} else {
 							consumer = new Consumer(addressText, clientID.getText() + " - Consumer",
-									"Q" + destinationSelect.getSelectedItem().toString(), clientID.getText(), Client.this);
+									"Q" + destinationSelect.getSelectedItem().toString(), clientID.getText(),
+									Client.this);
 						}
-						
+
 						consumer.run();
 					} else {
-						displayMessageDialog("No Topic or Queue is selected.  Please create or select a Topic or Queue.", "Requirements");
+						displayMessageDialog(
+								"No Topic or Queue is selected.  Please create or select a Topic or Queue.",
+								"Requirements");
 					}
 				}
 			}
@@ -747,11 +776,19 @@ public class Client extends JFrame {
 		});
 	}
 
-	// public void checkScroll() {
-	// int value = scrollR.getVerticalScrollBar().getModel().getValue();
-	// int maximum = scrollR.getVerticalScrollBar().getModel().getMaximum();
-	// int extent = scrollR.getVerticalScrollBar().getModel().getExtent();
-	//
+	public int getVerticalScrollBarValue() {
+		return scrollR.getVerticalScrollBar().getModel().getValue();
+	}
+
+	public int getVerticalScrollBarMaximum() {
+		return scrollR.getVerticalScrollBar().getModel().getMaximum();
+	}
+
+	public int getVerticalScrollBarExtent() {
+		return scrollR.getVerticalScrollBar().getModel().getExtent();
+	}
+
+	// public void checkScroll(int value, int maximum, int extent) {
 	// if (extent == maximum - value) {
 	// table.scrollRectToVisible(table.getCellRect(table.getRowCount() - 1, 0,
 	// true));

@@ -83,6 +83,10 @@ public class Consumer implements Runnable, MessageListener {
 	@Override
 	public void onMessage(Message message) {
 		try {
+			client.setExtent(client.getVerticalScrollBarExtent());
+			client.setValue(client.getVerticalScrollBarValue());
+			client.setMaximum(client.getVerticalScrollBarMaximum());
+			
 			if (message instanceof StreamMessage) {
 				StreamMessage streamMessage = (StreamMessage) message;
 				Object value = null;
