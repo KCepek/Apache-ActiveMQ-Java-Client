@@ -130,21 +130,84 @@ public class Consumer implements Runnable, MessageListener {
 				}
 			} else if (message instanceof BytesMessage) {
 				BytesMessage bytesMessage = (BytesMessage) message;
-				byte[] values = null;
-				long length = 0;
+				int size = 0;
+				byte type = 0;
 				
 				try {
-					length = bytesMessage.getBodyLength();
-					values = new byte[(int) length];
+					// Get the size and type of BytesMessage
+					type = bytesMessage.readByte();
+					size = (int) bytesMessage.readInt();
 					
-					bytesMessage.readBytes(values);
-
-					client.insertData(new Object[] { "byte[]", Arrays.toString(values), values });
+					if (type == 1) {
+						boolean[] values = new boolean[size];
+						for (int i = 0; i < size; i++) {
+							values[i] = bytesMessage.readBoolean();
+						}
+						client.insertData(new Object[] { "boolean[]", Arrays.toString(values), values });
+					} else if (type == 2) {
+						byte[] values = new byte[size];
+						for (int i = 0; i < size; i++) {
+							values[i] = bytesMessage.readByte();
+						}
+						client.insertData(new Object[] { "byte[]", Arrays.toString(values), values });
+					} else if (type == 3) {
+						char[] values = new char[size];
+						for (int i = 0; i < size; i++) {
+							values[i] = (char) bytesMessage.readByte();
+						}
+						client.insertData(new Object[] { "char[]", Arrays.toString(values), values });
+					} else if (type == 4) {
+						short[] values = new short[size];
+						for (int i = 0; i < size; i++) {
+							values[i] = bytesMessage.readShort();
+						}
+						client.insertData(new Object[] { "short[]", Arrays.toString(values), values });
+					} else if (type == 5) {
+						int[] values = new int[size];
+						for (int i = 0; i < size; i++) {
+							values[i] = bytesMessage.readInt();
+						}
+						client.insertData(new Object[] { "int[]", Arrays.toString(values), values });
+					} else if (type == 6) {
+						long[] values = new long[size];
+						for (int i = 0; i < size; i++) {
+							values[i] = bytesMessage.readLong();
+						}
+						client.insertData(new Object[] { "long[]", Arrays.toString(values), values });
+					} else if (type == 7) {
+						double[] values = new double[size];
+						for (int i = 0; i < size; i++) {
+							values[i] = bytesMessage.readDouble();
+						}
+						client.insertData(new Object[] { "double[]", Arrays.toString(values), values });
+					} else if (type == 8) {
+						float[] values = new float[size];
+						for (int i = 0; i < size; i++) {
+							values[i] = bytesMessage.readFloat();
+						}
+						client.insertData(new Object[] { "float[]", Arrays.toString(values), values });
+					}
 				} catch (MessageEOFException noMoreData) {
-					String error = "Caught while receiving data from the Consumer:\n\n" + noMoreData + "\n";
-					error += noMoreData.getStackTrace();
-					client.displayMessageDialog(error, "Error");
+					
 				}
+				// BytesMessage bytesMessage = (BytesMessage) message;
+				// byte[] values = null;
+				// long length = 0;
+				//
+				// try {
+				// length = bytesMessage.getBodyLength();
+				// values = new byte[(int) length];
+				//
+				// bytesMessage.readBytes(values);
+				//
+				// client.insertData(new Object[] { "byte[]",
+				// Arrays.toString(values), values });
+				// } catch (MessageEOFException noMoreData) {
+				// String error = "Caught while receiving data from the
+				// Consumer:\n\n" + noMoreData + "\n";
+				// error += noMoreData.getStackTrace();
+				// client.displayMessageDialog(error, "Error");
+				// }
 
 			} else if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;

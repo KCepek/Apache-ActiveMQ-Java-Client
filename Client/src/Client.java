@@ -21,7 +21,7 @@ public class Client extends JFrame {
 	private CardLayout cardLayout = null;
 
 	// Defaults
-	//private String defaultURL = "tcp://localhost";
+	// private String defaultURL = "tcp://localhost";
 	private String defaultURL = "tcp://clondaq6.jlab.org";
 	private int defaultPort = 61616;
 
@@ -277,7 +277,7 @@ public class Client extends JFrame {
 		contents.add(left);
 		contents.add(right);
 
-		// ActionListeners
+		// Listeners
 		usage.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -288,10 +288,22 @@ public class Client extends JFrame {
 						+ "Text -> This will send a String of all text in the text box in the form of a TextMessage.\n\n"
 						+ "Stream (One Type) -> First enter the primitive data type that will be sent.  The type can be either a byte, short, int, long, char, float, double, or bool (boolean).  Next, enter the amount of data to be sent followed by the data.  If the amount of data provided is less than the length, then the empty data will be filled in with the data type's equivalent of zero.\n\n"
 						+ "Stream (Mixed Type) -> This follows the same rules as stream messages of one type, except mix (mixed) is entered instead of the primitive type followed by the size of the data.  The primitive type is then written in front of each piece of data to specify what type the data should be.\n\n"
-						+ "Byte -> This follows the same rules as a StreamMessage; however, the data received is represented by a byte array with no type information attached to dissociate different data types.  The task of reading data from the received byte array is left to the user.\n\n"
+						+ "Byte -> This follows the same rules as a StreamMessage; however, the data received is represented by a byte array with one byte at the beginning of the message to designate the type.  Mixed type messages are not used, since they would just be a redundant version of a mixed type StreamMessage.  ByteMessages are meant to be faster due to less bytes being used to identify the type of data in the message.\n\n"
 						+ "    *Examples*\n      int 6 4 3 23 6 3 298\n          -> [4, 3, 23, 6, 3, 298]\n\n      int 4 3 2\n          -> [3, 2, 0, 0]\n\n      bool 4 true false 89fj TruE\n          -> [true, false, false, true]\n\n      char 3 f 8 a\n          -> [f, 8, a]\n\n      mix 5 int 4 bool true char f byte 2 double 32.38\n          -> [4, true, f, 2, 32.38]\n\n      mix 3 int 1 long 9283928\n          -> [1, 9283928, null]";
 
 				displayMessageDialog(general + "\n\n\n" + dataTypes, "How to Use");
+			}
+		});
+		
+		destinationSelect.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				int state = e.getStateChange();
+				if (state == ItemEvent.SELECTED) {
+					if (receive.getText().equals("Receive: On")) {
+						receive.doClick();
+					}
+				}
 			}
 		});
 
@@ -553,34 +565,9 @@ public class Client extends JFrame {
 									}
 									producer.sendBooleanBytesMessage(size, arrayN);
 								} else if (type.equals("mixed") || type.equals("mix")) {
-									Object[] arrayN = new Object[size];
-									String typeMix = "";
-									int adjustment = 0;
-									for (int i = 0; i < array.length - 2; i++) {
-										if (i % 2 == 0) {
-											typeMix = array[i + 2];
-											adjustment++;
-										} else {
-											if (typeMix.equals("byte")) {
-												arrayN[i - adjustment] = Byte.parseByte(array[i + 2]);
-											} else if (typeMix.equals("short")) {
-												arrayN[i - adjustment] = Short.parseShort(array[i + 2]);
-											} else if (typeMix.equals("int")) {
-												arrayN[i - adjustment] = Integer.parseInt(array[i + 2]);
-											} else if (typeMix.equals("long")) {
-												arrayN[i - adjustment] = Long.parseLong(array[i + 2]);
-											} else if (typeMix.equals("char")) {
-												arrayN[i - adjustment] = "" + array[i + 2].charAt(0);
-											} else if (typeMix.equals("float")) {
-												arrayN[i - adjustment] = Float.parseFloat(array[i + 2]);
-											} else if (typeMix.equals("double")) {
-												arrayN[i - adjustment] = Double.parseDouble(array[i + 2]);
-											} else if (typeMix.equals("boolean") || typeMix.equalsIgnoreCase("bool")) {
-												arrayN[i - adjustment] = Boolean.parseBoolean(array[i + 2]);
-											}
-										}
-									}
-									producer.sendMixedBytesMessage(size, arrayN);
+									displayMessageDialog(
+											"Mixed messages are not supported for a BytesMessage.\n\nThis would require data to be attached to a BytesMessage to specify what type of data is being sent, which would result in a redundant method that performs identical to using a mixed message with StreamMessage.",
+											"Warning");
 								}
 							}
 						}

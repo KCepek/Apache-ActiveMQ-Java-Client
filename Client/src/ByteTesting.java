@@ -15,7 +15,7 @@
  * 
  * boolean -> 1 followed by 1-byte representation
  * byte    -> 2 followed by 1-byte representation
- * char    -> 3 followed by 2-byte representation
+ * char    -> 3 followed by 2-byte representation for Java and 1-byte representation for C++
  * short   -> 4 followed by 2-byte representation
  * int     -> 5 followed by 4-byte representation
  * long    -> 6 followed by 8-byte representation
