@@ -17,13 +17,15 @@ import javax.jms.Topic;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-public class Consumer implements Runnable, MessageListener {
+import messagingInterface.Consumer;
+
+public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 	private String address = null;
 	private String clientID = null;
 	private String destinationName = null;
 	private String subscriptionName = null;
 
-	private boolean useTopics = true;
+	private boolean useTopics = false;
 
 	private Connection connection = null;
 	private Session session = null;
@@ -33,16 +35,14 @@ public class Consumer implements Runnable, MessageListener {
 
 	private Client client;
 
-	public Consumer(String address, String clientID, String destinationName, String subscriptionName, Client client) {
+	public ActiveMQConsumer(String address, String clientID, boolean useTopics, String destinationName,
+			String subscriptionName, Client client) {
 		this.address = address;
 		this.clientID = clientID;
 		this.subscriptionName = subscriptionName;
 		this.client = client;
-
-		if (destinationName.charAt(0) == 'Q') {
-			useTopics = false;
-		}
-		this.destinationName = destinationName.substring(1);
+		this.destinationName = destinationName;
+		this.useTopics = useTopics;
 	}
 
 	@Override
@@ -58,9 +58,11 @@ public class Consumer implements Runnable, MessageListener {
 			// Create a Session
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-			// Create a Topic or Queue to listen to messages with a MessageConsumer
+			// Create a Topic or Queue to listen to messages with a
+			// MessageConsumer
 			if (useTopics) {
-				// A durable subscriber is created to read Topic messages when the client is offline
+				// A durable subscriber is created to read Topic messages when
+				// the client is offline
 				topic = session.createTopic(destinationName);
 				messageConsumer = session.createDurableSubscriber(topic, subscriptionName);
 			} else {
@@ -86,7 +88,7 @@ public class Consumer implements Runnable, MessageListener {
 			client.setExtent(client.getVerticalScrollBarExtent());
 			client.setValue(client.getVerticalScrollBarValue());
 			client.setMaximum(client.getVerticalScrollBarMaximum());
-			
+
 			if (message instanceof StreamMessage) {
 				StreamMessage streamMessage = (StreamMessage) message;
 				Object value = null;
@@ -132,12 +134,12 @@ public class Consumer implements Runnable, MessageListener {
 				BytesMessage bytesMessage = (BytesMessage) message;
 				int size = 0;
 				byte type = 0;
-				
+
 				try {
 					// Get the size and type of BytesMessage
 					type = bytesMessage.readByte();
 					size = (int) bytesMessage.readInt();
-					
+
 					if (type == 1) {
 						boolean[] values = new boolean[size];
 						for (int i = 0; i < size; i++) {
@@ -188,7 +190,9 @@ public class Consumer implements Runnable, MessageListener {
 						client.insertData(new Object[] { "float[]", Arrays.toString(values), values });
 					}
 				} catch (MessageEOFException noMoreData) {
-					
+					String error = "Caught while receiving data from the ActiveMQConsumer:\n\n" + noMoreData + "\n";
+					error += noMoreData.getStackTrace();
+					client.displayMessageDialog(error, "Error");
 				}
 				// BytesMessage bytesMessage = (BytesMessage) message;
 				// byte[] values = null;
@@ -204,7 +208,7 @@ public class Consumer implements Runnable, MessageListener {
 				// Arrays.toString(values), values });
 				// } catch (MessageEOFException noMoreData) {
 				// String error = "Caught while receiving data from the
-				// Consumer:\n\n" + noMoreData + "\n";
+				// ActiveMQConsumer:\n\n" + noMoreData + "\n";
 				// error += noMoreData.getStackTrace();
 				// client.displayMessageDialog(error, "Error");
 				// }
@@ -216,25 +220,24 @@ public class Consumer implements Runnable, MessageListener {
 				client.insertData(data);
 			}
 		} catch (JMSException err) {
-			String error = "Caught while receiving data from the Consumer:\n\n" + err + "\n";
+			String error = "Caught while receiving data from the ActiveMQConsumer:\n\n" + err + "\n";
 			error += err.getStackTrace();
 			client.displayMessageDialog(error, "Error");
 		}
 	}
 
-	public void removeDurableSubscriber() throws JMSException {
-		messageConsumer.close();
-		session.unsubscribe(subscriptionName);
-	}
-
-	public void closeConnection() throws JMSException {
-		connection.close();
-	}
-
 	public void fillClientTable(Object[] values, Object type, boolean oneType) {
 		if (oneType) {
 			int sizeN = values.length;
-			if (type instanceof Byte) {
+			if (type instanceof Boolean) {
+				boolean[] valuesN = new boolean[sizeN];
+				for (int i = 0; i < sizeN; i++) {
+					if (values[i] != null) {
+						valuesN[i] = (boolean) values[i];
+					}
+				}
+				client.insertData(new Object[] { "boolean[]", Arrays.toString(valuesN), valuesN });
+			} else if (type instanceof Byte) {
 				byte[] valuesN = new byte[sizeN];
 				for (int i = 0; i < sizeN; i++) {
 					if (values[i] != null) {
@@ -242,6 +245,15 @@ public class Consumer implements Runnable, MessageListener {
 					}
 				}
 				client.insertData(new Object[] { "byte[]", Arrays.toString(valuesN), valuesN });
+			} else if (type instanceof Character) {
+				// char[] valuesN = ((String) values[0]).toCharArray();
+				char[] valuesN = new char[sizeN];
+				for (int i = 0; i < sizeN; i++) {
+					if (values[i] != null) {
+						valuesN[i] = (char) values[i];
+					}
+				}
+				client.insertData(new Object[] { "char[]", Arrays.toString(valuesN), valuesN });
 			} else if (type instanceof Short) {
 				short[] valuesN = new short[sizeN];
 				for (int i = 0; i < sizeN; i++) {
@@ -266,23 +278,6 @@ public class Consumer implements Runnable, MessageListener {
 					}
 				}
 				client.insertData(new Object[] { "long[]", Arrays.toString(valuesN), valuesN });
-			} else if (type instanceof Character) {
-				// char[] valuesN = ((String) values[0]).toCharArray();
-				char[] valuesN = new char[sizeN];
-				for (int i = 0; i < sizeN; i++) {
-					if (values[i] != null) {
-						valuesN[i] = (char) values[i];
-					}
-				}
-				client.insertData(new Object[] { "char[]", Arrays.toString(valuesN), valuesN });
-			} else if (type instanceof Float) {
-				float[] valuesN = new float[sizeN];
-				for (int i = 0; i < sizeN; i++) {
-					if (values[i] != null) {
-						valuesN[i] = (float) values[i];
-					}
-				}
-				client.insertData(new Object[] { "float[]", Arrays.toString(valuesN), valuesN });
 			} else if (type instanceof Double) {
 				double[] valuesN = new double[sizeN];
 				for (int i = 0; i < sizeN; i++) {
@@ -291,17 +286,28 @@ public class Consumer implements Runnable, MessageListener {
 					}
 				}
 				client.insertData(new Object[] { "double[]", Arrays.toString(valuesN), valuesN });
-			} else if (type instanceof Boolean) {
-				boolean[] valuesN = new boolean[sizeN];
+			} else if (type instanceof Float) {
+				float[] valuesN = new float[sizeN];
 				for (int i = 0; i < sizeN; i++) {
 					if (values[i] != null) {
-						valuesN[i] = (boolean) values[i];
+						valuesN[i] = (float) values[i];
 					}
 				}
-				client.insertData(new Object[] { "boolean[]", Arrays.toString(valuesN), valuesN });
+				client.insertData(new Object[] { "float[]", Arrays.toString(valuesN), valuesN });
 			}
 		} else {
 			client.insertData(new Object[] { "Object[]", Arrays.toString(values), values });
 		}
+	}
+
+	@Override
+	public void unsubscribe() throws JMSException {
+		messageConsumer.close();
+		session.unsubscribe(subscriptionName);
+	}
+
+	@Override
+	public void disconnect() throws JMSException {
+		connection.close();
 	}
 }

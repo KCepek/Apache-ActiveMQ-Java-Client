@@ -1,5 +1,7 @@
 import org.apache.activemq.ActiveMQConnectionFactory;
 
+import messagingInterface.Producer;
+
 import java.io.UnsupportedEncodingException;
 
 import javax.jms.BytesMessage;
@@ -11,27 +13,24 @@ import javax.jms.Session;
 import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 
-public class Producer implements Runnable {
+public class ActiveMQProducer implements Runnable, Producer {
 
 	private String address = null;
 	private String clientID = null;
 	private String destinationName = null;
 
-	private boolean useTopics = true;;
+	private boolean useTopics = false;
 
 	private Connection connection = null;
 	private Session session = null;
 	private Destination destination = null;
 	private MessageProducer messageProducer = null;
 
-	public Producer(String address, String clientID, String destinationName) {
+	public ActiveMQProducer(String address, String clientID, boolean useTopics, String destinationName) {
 		this.address = address;
 		this.clientID = clientID;
-
-		if (destinationName.charAt(0) == 'Q') {
-			useTopics = false;
-		}
-		this.destinationName = destinationName.substring(1);
+		this.destinationName = destinationName;
+		this.useTopics = useTopics;
 	}
 
 	@Override
@@ -63,39 +62,44 @@ public class Producer implements Runnable {
 		}
 	}
 
-	public String getDestinationName() {
-		return destinationName;
-	}
-
-	public void closeConnection() throws JMSException {
-		connection.close();
-	}
-
+	@Override
 	public void sendMixedStreamMessage(int size, Object... args) throws JMSException {
 		StreamMessage message = session.createStreamMessage();
 		message.writeInt(size);
 		for (Object arg : args) {
-			if (arg instanceof Byte) {
+
+			if (arg instanceof Boolean) {
+				message.writeBoolean((boolean) arg);
+			} else if (arg instanceof Byte) {
 				message.writeByte((byte) arg);
+			} else if (arg instanceof String) {
+				message.writeString((String) arg);
 			} else if (arg instanceof Short) {
 				message.writeShort((short) arg);
 			} else if (arg instanceof Integer) {
 				message.writeInt((int) arg);
 			} else if (arg instanceof Long) {
 				message.writeLong((long) arg);
-			} else if (arg instanceof String) {
-				message.writeString((String) arg);
-			} else if (arg instanceof Float) {
-				message.writeFloat((float) arg);
 			} else if (arg instanceof Double) {
 				message.writeDouble((double) arg);
-			} else if (arg instanceof Boolean) {
-				message.writeBoolean((boolean) arg);
+			} else if (arg instanceof Float) {
+				message.writeFloat((float) arg);
 			}
 		}
 		messageProducer.send(message);
 	}
 
+	@Override
+	public void sendBooleanStreamMessage(int size, boolean... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for (boolean arg : args) {
+			message.writeBoolean(arg);
+		}
+		messageProducer.send(message);
+	}
+
+	@Override
 	public void sendByteStreamMessage(int size, byte... args) throws JMSException {
 		StreamMessage message = session.createStreamMessage();
 		message.writeInt(size);
@@ -105,33 +109,7 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 
-	public void sendShortStreamMessage(int size, short... args) throws JMSException {
-		StreamMessage message = session.createStreamMessage();
-		message.writeInt(size);
-		for (short arg : args) {
-			message.writeShort(arg);
-		}
-		messageProducer.send(message);
-	}
-
-	public void sendIntStreamMessage(int size, int... args) throws JMSException {
-		StreamMessage message = session.createStreamMessage();
-		message.writeInt(size);
-		for (int arg : args) {
-			message.writeInt(arg);
-		}
-		messageProducer.send(message);
-	}
-
-	public void sendLongStreamMessage(int size, long... args) throws JMSException {
-		StreamMessage message = session.createStreamMessage();
-		message.writeInt(size);
-		for (long arg : args) {
-			message.writeLong(arg);
-		}
-		messageProducer.send(message);
-	}
-
+	@Override
 	public void sendCharStreamMessage(int size, char... args) throws JMSException {
 		StreamMessage message = session.createStreamMessage();
 		message.writeInt(size);
@@ -142,15 +120,37 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 
-	public void sendFloatStreamMessage(int size, float... args) throws JMSException {
+	@Override
+	public void sendShortStreamMessage(int size, short... args) throws JMSException {
 		StreamMessage message = session.createStreamMessage();
 		message.writeInt(size);
-		for (float arg : args) {
-			message.writeFloat(arg);
+		for (short arg : args) {
+			message.writeShort(arg);
 		}
 		messageProducer.send(message);
 	}
 
+	@Override
+	public void sendIntStreamMessage(int size, int... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for (int arg : args) {
+			message.writeInt(arg);
+		}
+		messageProducer.send(message);
+	}
+
+	@Override
+	public void sendLongStreamMessage(int size, long... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for (long arg : args) {
+			message.writeLong(arg);
+		}
+		messageProducer.send(message);
+	}
+
+	@Override
 	public void sendDoubleStreamMessage(int size, double... args) throws JMSException {
 		StreamMessage message = session.createStreamMessage();
 		message.writeInt(size);
@@ -160,9 +160,21 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 
-	public void sendBooleanStreamMessage(int size, boolean... args) throws JMSException {
+	@Override
+	public void sendFloatStreamMessage(int size, float... args) throws JMSException {
 		StreamMessage message = session.createStreamMessage();
 		message.writeInt(size);
+		for (float arg : args) {
+			message.writeFloat(arg);
+		}
+		messageProducer.send(message);
+	}
+
+	public void sendBooleanBytesMessage(int size, boolean... args) throws JMSException {
+		BytesMessage message = session.createBytesMessage();
+		message.writeByte((byte) 1);
+		message.writeInt(size);
+
 		for (boolean arg : args) {
 			message.writeBoolean(arg);
 		}
@@ -173,42 +185,9 @@ public class Producer implements Runnable {
 		BytesMessage message = session.createBytesMessage();
 		message.writeByte((byte) 2);
 		message.writeInt(size);
-		
+
 		for (byte arg : args) {
 			message.writeByte(arg);
-		}
-		messageProducer.send(message);
-	}
-
-	public void sendShortBytesMessage(int size, short... args) throws JMSException {
-		BytesMessage message = session.createBytesMessage();
-		message.writeByte((byte) 4);
-		message.writeInt(size);
-		
-		for (short arg : args) {
-			message.writeShort(arg);
-		}
-		messageProducer.send(message);
-	}
-
-	public void sendIntBytesMessage(int size, int... args) throws JMSException {
-		BytesMessage message = session.createBytesMessage();
-		message.writeByte((byte) 5);
-		message.writeInt(size);
-		
-		for (int arg : args) {
-			message.writeInt(arg);
-		}
-		messageProducer.send(message);
-	}
-
-	public void sendLongBytesMessage(int size, long... args) throws JMSException {
-		BytesMessage message = session.createBytesMessage();
-		message.writeByte((byte) 6);
-		message.writeInt(size);
-		
-		for (long arg : args) {
-			message.writeLong(arg);
 		}
 		messageProducer.send(message);
 	}
@@ -217,7 +196,6 @@ public class Producer implements Runnable {
 		BytesMessage message = session.createBytesMessage();
 		message.writeByte((byte) 3);
 		message.writeInt(size);
-		
 
 		String s = "";
 		for (char arg : args) {
@@ -231,13 +209,35 @@ public class Producer implements Runnable {
 		messageProducer.send(message);
 	}
 
-	public void sendFloatBytesMessage(int size, float... args) throws JMSException {
+	public void sendShortBytesMessage(int size, short... args) throws JMSException {
 		BytesMessage message = session.createBytesMessage();
-		message.writeByte((byte) 8);
+		message.writeByte((byte) 4);
 		message.writeInt(size);
-		
-		for (float arg : args) {
-			message.writeFloat(arg);
+
+		for (short arg : args) {
+			message.writeShort(arg);
+		}
+		messageProducer.send(message);
+	}
+
+	public void sendIntBytesMessage(int size, int... args) throws JMSException {
+		BytesMessage message = session.createBytesMessage();
+		message.writeByte((byte) 5);
+		message.writeInt(size);
+
+		for (int arg : args) {
+			message.writeInt(arg);
+		}
+		messageProducer.send(message);
+	}
+
+	public void sendLongBytesMessage(int size, long... args) throws JMSException {
+		BytesMessage message = session.createBytesMessage();
+		message.writeByte((byte) 6);
+		message.writeInt(size);
+
+		for (long arg : args) {
+			message.writeLong(arg);
 		}
 		messageProducer.send(message);
 	}
@@ -246,20 +246,20 @@ public class Producer implements Runnable {
 		BytesMessage message = session.createBytesMessage();
 		message.writeByte((byte) 7);
 		message.writeInt(size);
-		
+
 		for (double arg : args) {
 			message.writeDouble(arg);
 		}
 		messageProducer.send(message);
 	}
 
-	public void sendBooleanBytesMessage(int size, boolean... args) throws JMSException {
+	public void sendFloatBytesMessage(int size, float... args) throws JMSException {
 		BytesMessage message = session.createBytesMessage();
-		message.writeByte((byte) 1);
+		message.writeByte((byte) 8);
 		message.writeInt(size);
-		
-		for (boolean arg : args) {
-			message.writeBoolean(arg);
+
+		for (float arg : args) {
+			message.writeFloat(arg);
 		}
 		messageProducer.send(message);
 	}
@@ -268,5 +268,10 @@ public class Producer implements Runnable {
 		TextMessage message = session.createTextMessage(s);
 		// textMessage.setJMSDeliveryMode(DeliveryMode.PERSISTENT);
 		messageProducer.send(message);
+	}
+
+	@Override
+	public void disconnect() throws JMSException {
+		connection.close();
 	}
 }

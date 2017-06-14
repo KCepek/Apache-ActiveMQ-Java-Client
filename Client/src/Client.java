@@ -21,8 +21,8 @@ public class Client extends JFrame {
 	private CardLayout cardLayout = null;
 
 	// Defaults
-	// private String defaultURL = "tcp://localhost";
-	private String defaultURL = "tcp://clondaq6.jlab.org";
+	private String defaultURL = "tcp://localhost";
+	// private String defaultURL = "tcp://clondaq6.jlab.org";
 	private int defaultPort = 61616;
 
 	// GUI Components - card1
@@ -62,8 +62,8 @@ public class Client extends JFrame {
 	private Set<ActiveMQTopic> topics = null;
 	private Set<ActiveMQQueue> queues = null;
 	private DefaultComboBoxModel<String> model = null;
-	private Consumer consumer = null;
-	private Producer producer = null;
+	private ActiveMQConsumer activeMQConsumer = null;
+	private ActiveMQProducer activeMQProducer = null;
 
 	public void insertData(Object[] data) {
 		((DefaultTableModel) table.getModel()).addRow(data);
@@ -177,7 +177,7 @@ public class Client extends JFrame {
 
 						updateDestinations();
 
-						// Display Consumer and Producer settings
+						// Display ActiveMQConsumer and ActiveMQProducer settings
 						cardLayout.show(cards, "2");
 
 					} catch (Exception err) {
@@ -282,7 +282,7 @@ public class Client extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String general = "--GENERAL--\n"
-						+ "All of the known Destinations will be displayed in the ComboBox.  If there are none, press the \"Create Destination\" button and enter a name for one.  Note that an actual Destination on the server will not be created until a message is sent or a consumer is set to listen to the Destination (the Receive button is set to On).  Additionally, the program may not show any Destinations even though the server has at least one.  In this case, press the \"Refresh\" button to force the client to check the server again.  Pressing the Use button will change whether a Topic or Queue is used for the Destination.  Lastly, one can press the \"Disconnect\" button to disconnect from the server and to reconnect to a different server.";
+						+ "All of the known Destinations will be displayed in the ComboBox.  If there are none, press the \"Create Destination\" button and enter a name for one.  Note that an actual Destination on the server will not be created until a message is sent or a activeMQConsumer is set to listen to the Destination (the Receive button is set to On).  Additionally, the program may not show any Destinations even though the server has at least one.  In this case, press the \"Refresh\" button to force the client to check the server again.  Pressing the Use button will change whether a Topic or Queue is used for the Destination.  Lastly, one can press the \"Disconnect\" button to disconnect from the server and to reconnect to a different server.";
 
 				String dataTypes = "--MESSAGE TYPES--\n"
 						+ "Text -> This will send a String of all text in the text box in the form of a TextMessage.\n\n"
@@ -294,7 +294,7 @@ public class Client extends JFrame {
 				displayMessageDialog(general + "\n\n\n" + dataTypes, "How to Use");
 			}
 		});
-		
+
 		destinationSelect.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
@@ -388,17 +388,17 @@ public class Client extends JFrame {
 				if (destinationSelect.getSelectedItem() != null) {
 					try {
 						if (destinationType.getText().equals("Use: Topics")) {
-							producer = new Producer(addressText, clientID.getText() + " - Producer",
-									"T" + destinationSelect.getSelectedItem().toString());
+							activeMQProducer = new ActiveMQProducer(addressText, clientID.getText() + " - ActiveMQProducer", true,
+									destinationSelect.getSelectedItem().toString());
 						} else {
-							producer = new Producer(addressText, clientID.getText() + " - Producer",
-									"Q" + destinationSelect.getSelectedItem().toString());
+							activeMQProducer = new ActiveMQProducer(addressText, clientID.getText() + " - ActiveMQProducer", false,
+									destinationSelect.getSelectedItem().toString());
 						}
 
-						producer.run();
+						activeMQProducer.run();
 
 						if (dataType.getText().equals("Message Type: Text")) {
-							producer.sendTextMessage(sendText.getText());
+							activeMQProducer.sendTextMessage(sendText.getText());
 						} else if (dataType.getText().equals("Message Type: Stream")) {
 							// Parse the text to decide what type of primitives
 							// to send
@@ -423,49 +423,49 @@ public class Client extends JFrame {
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Byte.parseByte(array[i + 2]);
 									}
-									producer.sendByteStreamMessage(size, arrayN);
+									activeMQProducer.sendByteStreamMessage(size, arrayN);
 								} else if (type.equals("short")) {
 									short[] arrayN = new short[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Short.parseShort(array[i + 2]);
 									}
-									producer.sendShortStreamMessage(size, arrayN);
+									activeMQProducer.sendShortStreamMessage(size, arrayN);
 								} else if (type.equals("int")) {
 									int[] arrayN = new int[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Integer.parseInt(array[i + 2]);
 									}
-									producer.sendIntStreamMessage(size, arrayN);
+									activeMQProducer.sendIntStreamMessage(size, arrayN);
 								} else if (type.equals("long")) {
 									long[] arrayN = new long[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Long.parseLong(array[i + 2]);
 									}
-									producer.sendLongStreamMessage(size, arrayN);
+									activeMQProducer.sendLongStreamMessage(size, arrayN);
 								} else if (type.equals("char")) {
 									char[] arrayN = new char[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = array[i + 2].charAt(0);
 									}
-									producer.sendCharStreamMessage(size, arrayN);
+									activeMQProducer.sendCharStreamMessage(size, arrayN);
 								} else if (type.equals("float")) {
 									float[] arrayN = new float[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Float.parseFloat(array[i + 2]);
 									}
-									producer.sendFloatStreamMessage(size, arrayN);
+									activeMQProducer.sendFloatStreamMessage(size, arrayN);
 								} else if (type.equals("double")) {
 									double[] arrayN = new double[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Double.parseDouble(array[i + 2]);
 									}
-									producer.sendDoubleStreamMessage(size, arrayN);
+									activeMQProducer.sendDoubleStreamMessage(size, arrayN);
 								} else if (type.equals("boolean") || type.equals("bool")) {
 									boolean[] arrayN = new boolean[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Boolean.parseBoolean(array[i + 2]);
 									}
-									producer.sendBooleanStreamMessage(size, arrayN);
+									activeMQProducer.sendBooleanStreamMessage(size, arrayN);
 								} else if (type.equals("mixed") || type.equals("mix")) {
 									Object[] arrayN = new Object[size];
 									String typeMix = "";
@@ -494,7 +494,7 @@ public class Client extends JFrame {
 											}
 										}
 									}
-									producer.sendMixedStreamMessage(size, arrayN);
+									activeMQProducer.sendMixedStreamMessage(size, arrayN);
 								}
 							}
 						} else if (dataType.getText().equals("Message Type: Byte")) {
@@ -521,49 +521,49 @@ public class Client extends JFrame {
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Byte.parseByte(array[i + 2]);
 									}
-									producer.sendByteBytesMessage(size, arrayN);
+									activeMQProducer.sendByteBytesMessage(size, arrayN);
 								} else if (type.equals("short")) {
 									short[] arrayN = new short[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Short.parseShort(array[i + 2]);
 									}
-									producer.sendShortBytesMessage(size, arrayN);
+									activeMQProducer.sendShortBytesMessage(size, arrayN);
 								} else if (type.equals("int")) {
 									int[] arrayN = new int[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Integer.parseInt(array[i + 2]);
 									}
-									producer.sendIntBytesMessage(size, arrayN);
+									activeMQProducer.sendIntBytesMessage(size, arrayN);
 								} else if (type.equals("long")) {
 									long[] arrayN = new long[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Long.parseLong(array[i + 2]);
 									}
-									producer.sendLongBytesMessage(size, arrayN);
+									activeMQProducer.sendLongBytesMessage(size, arrayN);
 								} else if (type.equals("char")) {
 									char[] arrayN = new char[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = array[i + 2].charAt(0);
 									}
-									producer.sendCharBytesMessage(size, arrayN);
+									activeMQProducer.sendCharBytesMessage(size, arrayN);
 								} else if (type.equals("float")) {
 									float[] arrayN = new float[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Float.parseFloat(array[i + 2]);
 									}
-									producer.sendFloatBytesMessage(size, arrayN);
+									activeMQProducer.sendFloatBytesMessage(size, arrayN);
 								} else if (type.equals("double")) {
 									double[] arrayN = new double[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Double.parseDouble(array[i + 2]);
 									}
-									producer.sendDoubleBytesMessage(size, arrayN);
+									activeMQProducer.sendDoubleBytesMessage(size, arrayN);
 								} else if (type.equals("boolean") || type.equals("bool")) {
 									boolean[] arrayN = new boolean[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Boolean.parseBoolean(array[i + 2]);
 									}
-									producer.sendBooleanBytesMessage(size, arrayN);
+									activeMQProducer.sendBooleanBytesMessage(size, arrayN);
 								} else if (type.equals("mixed") || type.equals("mix")) {
 									displayMessageDialog(
 											"Mixed messages are not supported for a BytesMessage.\n\nThis would require data to be attached to a BytesMessage to specify what type of data is being sent, which would result in a redundant method that performs identical to using a mixed message with StreamMessage.",
@@ -572,12 +572,12 @@ public class Client extends JFrame {
 							}
 						}
 
-						producer.closeConnection();
+						activeMQProducer.disconnect();
 					} catch (Exception err) {
 						try {
-							producer.closeConnection();
+							activeMQProducer.disconnect();
 						} catch (JMSException e1) {
-							String error = "Caught while closing Producer connection:\n\n" + err + "\n";
+							String error = "Caught while closing ActiveMQProducer connection:\n\n" + err + "\n";
 							error += err.getStackTrace();
 							displayMessageDialog(error, "Error");
 						}
@@ -592,7 +592,7 @@ public class Client extends JFrame {
 			}
 		});
 
-		// Opens a new consumer thread to receive messages
+		// Opens a new activeMQConsumer thread to receive messages
 		receive.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -601,9 +601,9 @@ public class Client extends JFrame {
 					receive.setText("Receive: Off");
 
 					try {
-						consumer.closeConnection();
+						activeMQConsumer.disconnect();
 					} catch (Exception err) {
-						String error = "Caught while closing Consumer:\n\n" + err + "\n";
+						String error = "Caught while closing ActiveMQConsumer:\n\n" + err + "\n";
 						error += err.getStackTrace();
 						displayMessageDialog(error, "Error");
 					}
@@ -613,16 +613,14 @@ public class Client extends JFrame {
 						receive.setText("Receive: On");
 
 						if (destinationType.getText().equals("Use: Topics")) {
-							consumer = new Consumer(addressText, clientID.getText() + " - Consumer",
-									"T" + destinationSelect.getSelectedItem().toString(), clientID.getText(),
-									Client.this);
+							activeMQConsumer = new ActiveMQConsumer(addressText, clientID.getText() + " - ActiveMQConsumer", true,
+									destinationSelect.getSelectedItem().toString(), clientID.getText(), Client.this);
 						} else {
-							consumer = new Consumer(addressText, clientID.getText() + " - Consumer",
-									"Q" + destinationSelect.getSelectedItem().toString(), clientID.getText(),
-									Client.this);
+							activeMQConsumer = new ActiveMQConsumer(addressText, clientID.getText() + " - ActiveMQConsumer", false,
+									destinationSelect.getSelectedItem().toString(), clientID.getText(), Client.this);
 						}
 
-						consumer.run();
+						activeMQConsumer.run();
 					} else {
 						displayMessageDialog(
 								"No Topic or Queue is selected.  Please create or select a Topic or Queue.",
@@ -723,11 +721,11 @@ public class Client extends JFrame {
 			if (receive != null && receive.getText() == "Receive: On") {
 				receive.doClick();
 			}
-			if (consumer != null) {
-				consumer.closeConnection();
+			if (activeMQConsumer != null) {
+				activeMQConsumer.disconnect();
 			}
-			if (producer != null) {
-				producer.closeConnection();
+			if (activeMQProducer != null) {
+				activeMQProducer.disconnect();
 			}
 			if (connection != null) {
 				connection.close();
