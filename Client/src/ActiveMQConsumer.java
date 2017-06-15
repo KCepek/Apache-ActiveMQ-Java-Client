@@ -25,7 +25,7 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 	private String destinationName = null;
 	private String subscriptionName = null;
 
-	private boolean useTopics = false;
+	private boolean isConnected = false;
 
 	private Connection connection = null;
 	private Session session = null;
@@ -35,14 +35,24 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 
 	private Client client;
 
-	public ActiveMQConsumer(String address, String clientID, boolean useTopics, String destinationName,
-			String subscriptionName, Client client) {
+	public ActiveMQConsumer(String address, String clientID, String destinationName, String subscriptionName,
+			Client client) {
 		this.address = address;
 		this.clientID = clientID;
+		this.destinationName = destinationName;
 		this.subscriptionName = subscriptionName;
 		this.client = client;
+	}
+
+	public ActiveMQConsumer(String address, String clientID, String destinationName, Client client) {
+		this.address = address;
+		this.clientID = clientID;
 		this.destinationName = destinationName;
-		this.useTopics = useTopics;
+		this.client = client;
+	}
+
+	public boolean isConnected() {
+		return isConnected;
 	}
 
 	@Override
@@ -54,13 +64,14 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 			// Create a Connection
 			connection = (ActiveMQConnection) connectionFactory.createConnection();
 			connection.setClientID(clientID);
+			isConnected = true;
 
 			// Create a Session
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
 			// Create a Topic or Queue to listen to messages with a
 			// MessageConsumer
-			if (useTopics) {
+			if (subscriptionName != null) {
 				// A durable subscriber is created to read Topic messages when
 				// the client is offline
 				topic = session.createTopic(destinationName);
@@ -308,6 +319,7 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 
 	@Override
 	public void disconnect() throws JMSException {
+		isConnected = false;
 		connection.close();
 	}
 }

@@ -1,13 +1,13 @@
 package messagingInterface;
 
-import javax.jms.Connection;
-
 public interface ServerMessaging {
-	Connection connect(String address, String clientID);
+	void connect();
 
 	void disconnect();
 
-	Producer createProducer(String address, String clientID, boolean useTopics);
+	Producer createProducer(String address, String clientID, String destinationName, boolean useTopics);
 
-	Consumer createConsumer(String address, String clientID, boolean useTopics, String destinationName, String subscriptionName);
+	Consumer createConsumer(String address, String clientID, String destinationName, String subscriptionName);
+	
+	Consumer createConsumer(String address, String clientID, String destinationName);
 }

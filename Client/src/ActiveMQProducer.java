@@ -20,17 +20,22 @@ public class ActiveMQProducer implements Runnable, Producer {
 	private String destinationName = null;
 
 	private boolean useTopics = false;
+	private boolean isConnected = false;
 
 	private Connection connection = null;
 	private Session session = null;
 	private Destination destination = null;
 	private MessageProducer messageProducer = null;
 
-	public ActiveMQProducer(String address, String clientID, boolean useTopics, String destinationName) {
+	public ActiveMQProducer(String address, String clientID, String destinationName, boolean useTopics) {
 		this.address = address;
 		this.clientID = clientID;
 		this.destinationName = destinationName;
 		this.useTopics = useTopics;
+	}
+
+	public boolean isConnected() {
+		return isConnected;
 	}
 
 	@Override
@@ -42,6 +47,7 @@ public class ActiveMQProducer implements Runnable, Producer {
 			// Create a Connection
 			connection = connectionFactory.createConnection();
 			connection.setClientID(clientID);
+			isConnected = true;
 
 			// Create a Session
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -60,33 +66,6 @@ public class ActiveMQProducer implements Runnable, Producer {
 			System.out.println("Caught: " + e);
 			e.printStackTrace();
 		}
-	}
-
-	@Override
-	public void sendMixedStreamMessage(int size, Object... args) throws JMSException {
-		StreamMessage message = session.createStreamMessage();
-		message.writeInt(size);
-		for (Object arg : args) {
-
-			if (arg instanceof Boolean) {
-				message.writeBoolean((boolean) arg);
-			} else if (arg instanceof Byte) {
-				message.writeByte((byte) arg);
-			} else if (arg instanceof String) {
-				message.writeString((String) arg);
-			} else if (arg instanceof Short) {
-				message.writeShort((short) arg);
-			} else if (arg instanceof Integer) {
-				message.writeInt((int) arg);
-			} else if (arg instanceof Long) {
-				message.writeLong((long) arg);
-			} else if (arg instanceof Double) {
-				message.writeDouble((double) arg);
-			} else if (arg instanceof Float) {
-				message.writeFloat((float) arg);
-			}
-		}
-		messageProducer.send(message);
 	}
 
 	@Override
@@ -166,6 +145,33 @@ public class ActiveMQProducer implements Runnable, Producer {
 		message.writeInt(size);
 		for (float arg : args) {
 			message.writeFloat(arg);
+		}
+		messageProducer.send(message);
+	}
+
+	@Override
+	public void sendMixedStreamMessage(int size, Object... args) throws JMSException {
+		StreamMessage message = session.createStreamMessage();
+		message.writeInt(size);
+		for (Object arg : args) {
+
+			if (arg instanceof Boolean) {
+				message.writeBoolean((boolean) arg);
+			} else if (arg instanceof Byte) {
+				message.writeByte((byte) arg);
+			} else if (arg instanceof String) {
+				message.writeString((String) arg);
+			} else if (arg instanceof Short) {
+				message.writeShort((short) arg);
+			} else if (arg instanceof Integer) {
+				message.writeInt((int) arg);
+			} else if (arg instanceof Long) {
+				message.writeLong((long) arg);
+			} else if (arg instanceof Double) {
+				message.writeDouble((double) arg);
+			} else if (arg instanceof Float) {
+				message.writeFloat((float) arg);
+			}
 		}
 		messageProducer.send(message);
 	}
@@ -272,6 +278,7 @@ public class ActiveMQProducer implements Runnable, Producer {
 
 	@Override
 	public void disconnect() throws JMSException {
+		isConnected = false;
 		connection.close();
 	}
 }

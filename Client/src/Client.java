@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Arrays;
 import java.util.Set;
 
 import javax.jms.JMSException;
@@ -10,11 +11,16 @@ import javax.swing.table.DefaultTableModel;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.DestinationSource;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
+import messagingInterface.Consumer;
+import messagingInterface.Producer;
+import messagingInterface.ServerMessaging;
+
 @SuppressWarnings("serial")
-public class Client extends JFrame {
+public class Client extends JFrame implements ServerMessaging {
 	// JFrame, JPanel, and Layout
 	private JFrame frame = null;
 	private JPanel cards = null;
@@ -158,33 +164,7 @@ public class Client extends JFrame {
 				}
 				// If the parameters are valid, try connecting
 				else {
-					try {
-						// Initialize ConnectionFactory
-						connectionFactory = new ActiveMQConnectionFactory(addressText);
-
-						// Initialize and Start Connection
-						connection = (ActiveMQConnection) connectionFactory.createConnection();
-						connection.setClientID("");
-						connection.start();
-
-						// Initialize Session
-						session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-						// Get all Destinations
-						ds = connection.getDestinationSource();
-						topics = ds.getTopics();
-						queues = ds.getQueues();
-
-						updateDestinations();
-
-						// Display ActiveMQConsumer and ActiveMQProducer settings
-						cardLayout.show(cards, "2");
-
-					} catch (Exception err) {
-						String error = "Caught while connecting:\n\n" + err + "\n";
-						error += err.getStackTrace();
-						displayMessageDialog(error, "Error");
-					}
+					connect();
 				}
 			}
 		});
@@ -242,7 +222,7 @@ public class Client extends JFrame {
 
 		constraints2.gridx = 1;
 		constraints2.gridy = 0;
-		constraints2.fill = GridBagConstraints.HORIZONTAL;
+		constraints2.fill = GridBagConstraints.BOTH;
 		right.add(destinationType, constraints2);
 
 		constraints2.gridy = 1;
@@ -303,6 +283,14 @@ public class Client extends JFrame {
 					if (receive.getText().equals("Receive: On")) {
 						receive.doClick();
 					}
+					if (activeMQProducer != null && activeMQProducer.isConnected()) {
+						try {
+							activeMQProducer.disconnect();
+						} catch (JMSException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					}
 				}
 			}
 		});
@@ -342,6 +330,14 @@ public class Client extends JFrame {
 				}
 				if (receive.getText().equals("Receive: On")) {
 					receive.doClick();
+				}
+				if (activeMQProducer != null && activeMQProducer.isConnected()) {
+					try {
+						activeMQProducer.disconnect();
+					} catch (JMSException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 				}
 				refresh.doClick();
 			}
@@ -387,15 +383,18 @@ public class Client extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if (destinationSelect.getSelectedItem() != null) {
 					try {
-						if (destinationType.getText().equals("Use: Topics")) {
-							activeMQProducer = new ActiveMQProducer(addressText, clientID.getText() + " - ActiveMQProducer", true,
-									destinationSelect.getSelectedItem().toString());
-						} else {
-							activeMQProducer = new ActiveMQProducer(addressText, clientID.getText() + " - ActiveMQProducer", false,
-									destinationSelect.getSelectedItem().toString());
+						if (activeMQProducer == null || !activeMQProducer.isConnected()) {
+							if (destinationType.getText().equals("Use: Topics")) {
+								activeMQProducer = (ActiveMQProducer) createProducer(addressText,
+										clientID.getText() + " - ActiveMQProducer",
+										destinationSelect.getSelectedItem().toString(), true);
+							} else {
+								activeMQProducer = (ActiveMQProducer) createProducer(addressText,
+										clientID.getText() + " - ActiveMQProducer",
+										destinationSelect.getSelectedItem().toString(), false);
+							}
+							activeMQProducer.run();
 						}
-
-						activeMQProducer.run();
 
 						if (dataType.getText().equals("Message Type: Text")) {
 							activeMQProducer.sendTextMessage(sendText.getText());
@@ -418,12 +417,24 @@ public class Client extends JFrame {
 								// types match
 								int size = Integer.parseInt(array[1]);
 
-								if (type.equals("byte")) {
+								if (type.equals("boolean") || type.equals("bool")) {
+									boolean[] arrayN = new boolean[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Boolean.parseBoolean(array[i + 2]);
+									}
+									activeMQProducer.sendBooleanStreamMessage(size, arrayN);
+								} else if (type.equals("byte")) {
 									byte[] arrayN = new byte[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Byte.parseByte(array[i + 2]);
 									}
 									activeMQProducer.sendByteStreamMessage(size, arrayN);
+								} else if (type.equals("char")) {
+									char[] arrayN = new char[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = array[i + 2].charAt(0);
+									}
+									activeMQProducer.sendCharStreamMessage(size, arrayN);
 								} else if (type.equals("short")) {
 									short[] arrayN = new short[size];
 									for (int i = 0; i < array.length - 2; i++) {
@@ -442,30 +453,18 @@ public class Client extends JFrame {
 										arrayN[i] = Long.parseLong(array[i + 2]);
 									}
 									activeMQProducer.sendLongStreamMessage(size, arrayN);
-								} else if (type.equals("char")) {
-									char[] arrayN = new char[size];
-									for (int i = 0; i < array.length - 2; i++) {
-										arrayN[i] = array[i + 2].charAt(0);
-									}
-									activeMQProducer.sendCharStreamMessage(size, arrayN);
-								} else if (type.equals("float")) {
-									float[] arrayN = new float[size];
-									for (int i = 0; i < array.length - 2; i++) {
-										arrayN[i] = Float.parseFloat(array[i + 2]);
-									}
-									activeMQProducer.sendFloatStreamMessage(size, arrayN);
 								} else if (type.equals("double")) {
 									double[] arrayN = new double[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Double.parseDouble(array[i + 2]);
 									}
 									activeMQProducer.sendDoubleStreamMessage(size, arrayN);
-								} else if (type.equals("boolean") || type.equals("bool")) {
-									boolean[] arrayN = new boolean[size];
+								} else if (type.equals("float")) {
+									float[] arrayN = new float[size];
 									for (int i = 0; i < array.length - 2; i++) {
-										arrayN[i] = Boolean.parseBoolean(array[i + 2]);
+										arrayN[i] = Float.parseFloat(array[i + 2]);
 									}
-									activeMQProducer.sendBooleanStreamMessage(size, arrayN);
+									activeMQProducer.sendFloatStreamMessage(size, arrayN);
 								} else if (type.equals("mixed") || type.equals("mix")) {
 									Object[] arrayN = new Object[size];
 									String typeMix = "";
@@ -516,12 +515,24 @@ public class Client extends JFrame {
 								// types match
 								int size = Integer.parseInt(array[1]);
 
-								if (type.equals("byte")) {
+								if (type.equals("boolean") || type.equals("bool")) {
+									boolean[] arrayN = new boolean[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = Boolean.parseBoolean(array[i + 2]);
+									}
+									activeMQProducer.sendBooleanBytesMessage(size, arrayN);
+								} else if (type.equals("byte")) {
 									byte[] arrayN = new byte[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Byte.parseByte(array[i + 2]);
 									}
 									activeMQProducer.sendByteBytesMessage(size, arrayN);
+								} else if (type.equals("char")) {
+									char[] arrayN = new char[size];
+									for (int i = 0; i < array.length - 2; i++) {
+										arrayN[i] = array[i + 2].charAt(0);
+									}
+									activeMQProducer.sendCharBytesMessage(size, arrayN);
 								} else if (type.equals("short")) {
 									short[] arrayN = new short[size];
 									for (int i = 0; i < array.length - 2; i++) {
@@ -540,30 +551,18 @@ public class Client extends JFrame {
 										arrayN[i] = Long.parseLong(array[i + 2]);
 									}
 									activeMQProducer.sendLongBytesMessage(size, arrayN);
-								} else if (type.equals("char")) {
-									char[] arrayN = new char[size];
-									for (int i = 0; i < array.length - 2; i++) {
-										arrayN[i] = array[i + 2].charAt(0);
-									}
-									activeMQProducer.sendCharBytesMessage(size, arrayN);
-								} else if (type.equals("float")) {
-									float[] arrayN = new float[size];
-									for (int i = 0; i < array.length - 2; i++) {
-										arrayN[i] = Float.parseFloat(array[i + 2]);
-									}
-									activeMQProducer.sendFloatBytesMessage(size, arrayN);
 								} else if (type.equals("double")) {
 									double[] arrayN = new double[size];
 									for (int i = 0; i < array.length - 2; i++) {
 										arrayN[i] = Double.parseDouble(array[i + 2]);
 									}
 									activeMQProducer.sendDoubleBytesMessage(size, arrayN);
-								} else if (type.equals("boolean") || type.equals("bool")) {
-									boolean[] arrayN = new boolean[size];
+								} else if (type.equals("float")) {
+									float[] arrayN = new float[size];
 									for (int i = 0; i < array.length - 2; i++) {
-										arrayN[i] = Boolean.parseBoolean(array[i + 2]);
+										arrayN[i] = Float.parseFloat(array[i + 2]);
 									}
-									activeMQProducer.sendBooleanBytesMessage(size, arrayN);
+									activeMQProducer.sendFloatBytesMessage(size, arrayN);
 								} else if (type.equals("mixed") || type.equals("mix")) {
 									displayMessageDialog(
 											"Mixed messages are not supported for a BytesMessage.\n\nThis would require data to be attached to a BytesMessage to specify what type of data is being sent, which would result in a redundant method that performs identical to using a mixed message with StreamMessage.",
@@ -571,16 +570,7 @@ public class Client extends JFrame {
 								}
 							}
 						}
-
-						activeMQProducer.disconnect();
 					} catch (Exception err) {
-						try {
-							activeMQProducer.disconnect();
-						} catch (JMSException e1) {
-							String error = "Caught while closing ActiveMQProducer connection:\n\n" + err + "\n";
-							error += err.getStackTrace();
-							displayMessageDialog(error, "Error");
-						}
 						String error = "Caught while sending message:\n\n" + err + "\n";
 						error += err.getStackTrace();
 						displayMessageDialog(error, "Error");
@@ -592,7 +582,7 @@ public class Client extends JFrame {
 			}
 		});
 
-		// Opens a new activeMQConsumer thread to receive messages
+		// Opens a new ActiveMQConsumer thread to receive messages
 		receive.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -613,11 +603,13 @@ public class Client extends JFrame {
 						receive.setText("Receive: On");
 
 						if (destinationType.getText().equals("Use: Topics")) {
-							activeMQConsumer = new ActiveMQConsumer(addressText, clientID.getText() + " - ActiveMQConsumer", true,
-									destinationSelect.getSelectedItem().toString(), clientID.getText(), Client.this);
+							activeMQConsumer = (ActiveMQConsumer) createConsumer(addressText,
+									clientID.getText() + " - ActiveMQConsumer",
+									destinationSelect.getSelectedItem().toString(), clientID.getText());
 						} else {
-							activeMQConsumer = new ActiveMQConsumer(addressText, clientID.getText() + " - ActiveMQConsumer", false,
-									destinationSelect.getSelectedItem().toString(), clientID.getText(), Client.this);
+							activeMQConsumer = (ActiveMQConsumer) createConsumer(addressText,
+									clientID.getText() + " - ActiveMQConsumer",
+									destinationSelect.getSelectedItem().toString());
 						}
 
 						activeMQConsumer.run();
@@ -634,6 +626,17 @@ public class Client extends JFrame {
 		refresh.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
+				BrokerService broker = new BrokerService();
+				try {
+					broker.start();
+					System.out.println(Arrays.toString(broker.getAdminView().getInactiveDurableTopicSubscribers()));
+					broker.stop();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				
 				// Make sure to retain the previous choice if it isn't removed
 				String previous = (String) model.getSelectedItem();
 				updateDestinations();
@@ -716,27 +719,6 @@ public class Client extends JFrame {
 		destinationSelect.setModel(model);
 	}
 
-	public void disconnect() {
-		try {
-			if (receive != null && receive.getText() == "Receive: On") {
-				receive.doClick();
-			}
-			if (activeMQConsumer != null) {
-				activeMQConsumer.disconnect();
-			}
-			if (activeMQProducer != null) {
-				activeMQProducer.disconnect();
-			}
-			if (connection != null) {
-				connection.close();
-			}
-		} catch (Exception err) {
-			String error = "Caught while closing:\n\n" + err + "\n";
-			error += err.getStackTrace();
-			displayMessageDialog(error, "Error");
-		}
-	}
-
 	protected void displayMessageDialog(String message, String title) {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -773,10 +755,72 @@ public class Client extends JFrame {
 		return scrollR.getVerticalScrollBar().getModel().getExtent();
 	}
 
-	// public void checkScroll(int value, int maximum, int extent) {
-	// if (extent == maximum - value) {
-	// table.scrollRectToVisible(table.getCellRect(table.getRowCount() - 1, 0,
-	// true));
-	// }
-	// }
+	@Override
+	public Producer createProducer(String address, String clientID, String destinationName, boolean useTopics) {
+		return new ActiveMQProducer(address, clientID, destinationSelect.getSelectedItem().toString(), useTopics);
+	}
+
+	@Override
+	public Consumer createConsumer(String address, String clientID, String destinationName,
+			String subscriptionName) {
+		return new ActiveMQConsumer(address, clientID, destinationName, subscriptionName, Client.this);
+	}
+	
+	@Override
+	public Consumer createConsumer(String address, String clientID, String destinationName) {
+		return new ActiveMQConsumer(address, clientID, destinationName, Client.this);
+	}
+
+	@Override
+	public void connect() {
+		try {
+			// Initialize ConnectionFactory
+			connectionFactory = new ActiveMQConnectionFactory(addressText);
+
+			// Initialize and Start Connection
+			connection = (ActiveMQConnection) connectionFactory.createConnection();
+			connection.setClientID("");
+			connection.start();
+
+			// Initialize Session
+			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+			// Get all Destinations
+			ds = connection.getDestinationSource();
+			topics = ds.getTopics();
+			queues = ds.getQueues();
+
+			updateDestinations();
+
+			// Display ActiveMQConsumer and ActiveMQProducer settings
+			cardLayout.show(cards, "2");
+
+		} catch (Exception err) {
+			String error = "Caught while connecting:\n\n" + err + "\n";
+			error += err.getStackTrace();
+			displayMessageDialog(error, "Error");
+		}
+	}
+
+	@Override
+	public void disconnect() {
+		try {
+			if (receive != null && receive.getText() == "Receive: On") {
+				receive.doClick();
+			}
+			if (activeMQConsumer != null) {
+				activeMQConsumer.disconnect();
+			}
+			if (activeMQProducer != null) {
+				activeMQProducer.disconnect();
+			}
+			if (connection != null) {
+				connection.close();
+			}
+		} catch (Exception err) {
+			String error = "Caught while closing:\n\n" + err + "\n";
+			error += err.getStackTrace();
+			displayMessageDialog(error, "Error");
+		}
+	}
 }
