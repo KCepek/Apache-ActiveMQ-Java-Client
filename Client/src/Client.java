@@ -97,7 +97,8 @@ public class Client extends JFrame implements ServerMessaging {
 		constraints.insets = new Insets(10, 10, 10, 10);
 
 		// Add components
-		constraints.anchor = GridBagConstraints.WEST;
+		constraints.ipadx = 24;
+		constraints.ipady = 6;
 
 		constraints.gridx = 0;
 		constraints.gridy = 0;
@@ -175,13 +176,19 @@ public class Client extends JFrame implements ServerMessaging {
 
 		// Menu
 		JMenuBar menuBar = new JMenuBar();
+
 		JMenu helpMenu = new JMenu("Help");
 		JMenuItem usage = helpMenu.add("How to Use");
 		menuBar.add(helpMenu);
+
+		JMenu editMenu = new JMenu("Edit");
+		JMenuItem clear = editMenu.add("Clear");
+		menuBar.add(editMenu);
+
 		card2.add(menuBar, BorderLayout.NORTH);
 
 		// Contents
-		JPanel contents = new JPanel(new FlowLayout());
+		JPanel contents = new JPanel(new GridLayout());
 		card2.add(contents);
 
 		JPanel left = new JPanel();
@@ -200,6 +207,7 @@ public class Client extends JFrame implements ServerMessaging {
 		table = new JTable(modelR);
 		table.setPreferredScrollableViewportSize(new Dimension(400, 500));
 		table.setFillsViewportHeight(true);
+		table.setRowHeight(20);
 
 		table.getColumnModel().getColumn(0).setPreferredWidth(100);
 		table.getColumnModel().getColumn(1).setPreferredWidth(400);
@@ -208,21 +216,22 @@ public class Client extends JFrame implements ServerMessaging {
 		scrollR = new JScrollPane(table);
 		left.add(scrollR);
 
-		sendText.setPreferredSize(new Dimension(400, 50));
+		sendText.setPreferredSize(new Dimension(400, 75));
 		left.add(sendText);
 
 		JPanel right = new JPanel(new GridBagLayout());
 
 		// Create the constraints
 		GridBagConstraints constraints2 = new GridBagConstraints();
-		constraints2.insets = new Insets(20, 10, 20, 10);
+		constraints2.insets = new Insets(20, 0, 20, 0);
 
 		// Add components
-		constraints2.anchor = GridBagConstraints.CENTER;
+		constraints2.ipadx = 75;
+		constraints2.ipady = 6;
 
 		constraints2.gridx = 1;
 		constraints2.gridy = 0;
-		constraints2.fill = GridBagConstraints.BOTH;
+		constraints2.fill = GridBagConstraints.HORIZONTAL;
 		right.add(destinationType, constraints2);
 
 		constraints2.gridy = 1;
@@ -257,7 +266,9 @@ public class Client extends JFrame implements ServerMessaging {
 		contents.add(left);
 		contents.add(right);
 
-		// Listeners
+		// LISTENERS
+		// MENU
+		// Provides instructions for program behavior
 		usage.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -275,6 +286,44 @@ public class Client extends JFrame implements ServerMessaging {
 			}
 		});
 
+		// Removes all of the rows in the table
+		clear.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				modelR.setRowCount(0);
+			}
+		});
+
+		// TABLE
+		// Shows a window of the data for a row that is double-clicked
+		table.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					int row = table.getSelectedRow();
+					String data = "";
+					String type = (String) table.getModel().getValueAt(row, 0);
+
+					// data += table.getModel().getValueAt(row,
+					// 1).replaceAll("(\r\n|\n)", "<br/>");
+					data += table.getModel().getValueAt(row, 1);
+
+					displayMessageDialog(data, type);
+				}
+			}
+		});
+
+		// Scrolls to the bottom of the table if the scroll bar is at the bottom
+		table.addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				if (extent == maximum - value) {
+					table.scrollRectToVisible(table.getCellRect(table.getRowCount() - 1, 0, true));
+				}
+			}
+		});
+
+		// BOXES/BUTTONS
+		// Listens for changes in selecting a destination from the JComboBox and
+		// disconnects if a different destination is selected
 		destinationSelect.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
@@ -295,31 +344,7 @@ public class Client extends JFrame implements ServerMessaging {
 			}
 		});
 
-		// Shows a window of the data for a row that is double-clicked
-		table.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				if (e.getClickCount() == 2) {
-					int row = table.getSelectedRow();
-					String data = "";
-					String type = (String) table.getModel().getValueAt(row, 0);
-
-					// data += table.getModel().getValueAt(row,
-					// 1).replaceAll("(\r\n|\n)", "<br/>");
-					data += table.getModel().getValueAt(row, 1);
-
-					displayMessageDialog(data, type);
-				}
-			}
-		});
-
-		table.addComponentListener(new ComponentAdapter() {
-			public void componentResized(ComponentEvent e) {
-				if (extent == maximum - value) {
-					table.scrollRectToVisible(table.getCellRect(table.getRowCount() - 1, 0, true));
-				}
-			}
-		});
-
+		// Allows the user to decide whether to use Topics or Queues
 		destinationType.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -355,6 +380,7 @@ public class Client extends JFrame implements ServerMessaging {
 					if (jd.getValidatedText() != null) {
 						model.addElement(jd.getValidatedText());
 						session.createTopic(jd.getValidatedText());
+						destinationSelect.setSelectedItem(jd.getValidatedText());
 					}
 				} catch (Exception err) {
 					String error = "Caught while creating Destination:\n\n" + err + "\n";
@@ -364,6 +390,7 @@ public class Client extends JFrame implements ServerMessaging {
 			}
 		});
 
+		// Allows the user to decide which message type to send
 		dataType.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -377,7 +404,7 @@ public class Client extends JFrame implements ServerMessaging {
 			}
 		});
 
-		// Sends a TextMessage or an ObjectMessage based on the parameters
+		// Sends a StreamMessage, BytesMessage, or TextMessage
 		send.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -582,7 +609,8 @@ public class Client extends JFrame implements ServerMessaging {
 			}
 		});
 
-		// Opens a new ActiveMQConsumer thread to receive messages
+		// Opens a new ActiveMQConsumer thread to receive messages or closes and
+		// open one
 		receive.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -626,17 +654,17 @@ public class Client extends JFrame implements ServerMessaging {
 		refresh.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
-				BrokerService broker = new BrokerService();
-				try {
-					broker.start();
-					System.out.println(Arrays.toString(broker.getAdminView().getInactiveDurableTopicSubscribers()));
-					broker.stop();
-				} catch (Exception e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				
+
+				// BrokerService broker = new BrokerService();
+				// try {
+				// broker.start();
+				// System.out.println(Arrays.toString(broker.getAdminView().getInactiveDurableTopicSubscribers()));
+				// broker.stop();
+				// } catch (Exception e1) {
+				// // TODO Auto-generated catch block
+				// e1.printStackTrace();
+				// }
+
 				// Make sure to retain the previous choice if it isn't removed
 				String previous = (String) model.getSelectedItem();
 				updateDestinations();
@@ -761,11 +789,10 @@ public class Client extends JFrame implements ServerMessaging {
 	}
 
 	@Override
-	public Consumer createConsumer(String address, String clientID, String destinationName,
-			String subscriptionName) {
+	public Consumer createConsumer(String address, String clientID, String destinationName, String subscriptionName) {
 		return new ActiveMQConsumer(address, clientID, destinationName, subscriptionName, Client.this);
 	}
-	
+
 	@Override
 	public Consumer createConsumer(String address, String clientID, String destinationName) {
 		return new ActiveMQConsumer(address, clientID, destinationName, Client.this);
