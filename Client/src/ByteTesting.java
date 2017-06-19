@@ -38,35 +38,40 @@ public class ByteTesting {
 		System.out.println("These two bytes have a short value of:     " + bytesToShort2(shortBytes, 0));
 
 		// INT
-		// i.e. {9, 1, 2147483647} -> {5, 0, 0, 0, 9, 5, 0, 0, 0, 1, 5, 127, -1, -1, -1}
+		// i.e. {9, 1, 2147483647} -> {5, 0, 0, 0, 9, 5, 0, 0, 0, 1, 5, 127, -1,
+		// -1, -1}
 		byte[] intBytes = new byte[] { 127, -1, -1, -1 };
 		System.out.println("These four bytes have an int value of:     " + bytesToInt4(intBytes, 0));
 
 		// LONG
-		// i.e. {1, 9223372036854775807L} -> {6, 0, 0, 0, 0, 0, 0, 0, 1, 6, 127, -1, -1, -1, -1, -1, -1, -1}
+		// i.e. {1, 9223372036854775807L} -> {6, 0, 0, 0, 0, 0, 0, 0, 1, 6, 127,
+		// -1, -1, -1, -1, -1, -1, -1}
 		byte[] longBytes = new byte[] { 127, -1, -1, -1, -1, -1, -1, -1 };
 		System.out.println("These eight bytes have a long value of:    " + bytesToLong8(longBytes, 0));
 
 		// CHAR
-		// i.e. {'a', 'z', '5', 'a'} -> {3, 0, 97, 3, 0, 122, 3, 0, 53, 3, 0, 97}
+		// i.e. {'a', 'z', '5', 'a'} -> {3, 0, 97, 3, 0, 122, 3, 0, 53, 3, 0,
+		// 97}
 		byte[] charBytes = new byte[] { 0, 97 };
 		System.out.println("These two bytes have a char value of:      " + bytesToChar2(charBytes, 0));
-		
+
 		// FLOAT
-		// i.e. {3.2, 4.5, 3.2} -> {8, 64, 76, -52, -51, 8, 64, -112, 0, 0, 8, 64, 76, -52, -51}
-		byte[] floatBytes = new byte[] {64, 76, -52, -51};
+		// i.e. {3.2, 4.5, 3.2} -> {8, 64, 76, -52, -51, 8, 64, -112, 0, 0, 8,
+		// 64, 76, -52, -51}
+		byte[] floatBytes = new byte[] { 64, 76, -52, -51 };
 		System.out.println("These four bytes have a float value of:    " + bytesToFloat4(floatBytes, 0));
-		
+
 		// DOUBLE
-		// i.e. {123.456, 383} -> {7, 64, 94, -35, 47, 26, -97, -66, 119, 7, 64, 119, -16, 0, 0, 0, 0, 0}
-		byte[] doubleBytes = new byte[] {64, 94, -35, 47, 26, -97, -66, 119};
+		// i.e. {123.456, 383} -> {7, 64, 94, -35, 47, 26, -97, -66, 119, 7, 64,
+		// 119, -16, 0, 0, 0, 0, 0}
+		byte[] doubleBytes = new byte[] { 64, 94, -35, 47, 26, -97, -66, 119 };
 		System.out.println("These eight bytes have a double value of:  " + bytesToDouble8(doubleBytes, 0));
-		
+
 		// BOOLEAN
 		// i.e. {true, false, false} -> {1, 1, 1, 0, 1, 0}
-		byte[] booleanBytes = new byte[] {1};
+		byte[] booleanBytes = new byte[] { 1 };
 		System.out.println("This one byte has a boolean value of:      " + bytesToBoolean1(booleanBytes, 0));
-		
+
 	}
 
 	/**
@@ -77,7 +82,7 @@ public class ByteTesting {
 	 * @param offset
 	 *            - how much the first significant byte is offset in the byte
 	 *            array if the length of the array is greater than 2.
-	 * @return
+	 * @return a short derived from the passed bytes.
 	 */
 	public static short bytesToShort2(byte[] bytes, int offset) {
 		short ret = 0;
@@ -97,7 +102,7 @@ public class ByteTesting {
 	 * @param offset
 	 *            - how much the first significant byte is offset in the byte
 	 *            array if the length of the array is greater than 4.
-	 * @return
+	 * @return an int derived from the passed bytes.
 	 */
 	public static int bytesToInt4(byte[] bytes, int offset) {
 		int ret = 0;
@@ -117,7 +122,7 @@ public class ByteTesting {
 	 * @param offset
 	 *            - how much the first significant byte is offset in the byte
 	 *            array if the length of the array is greater than 8.
-	 * @return
+	 * @return a long derived from the passed bytes.
 	 */
 	public static long bytesToLong8(byte[] bytes, int offset) {
 		long ret = 0;
@@ -137,7 +142,7 @@ public class ByteTesting {
 	 * @param offset
 	 *            - how much the first significant byte is offset in the byte
 	 *            array if the length of the array is greater than 2.
-	 * @return
+	 * @return a char derived from the passed bytes.
 	 */
 	public static char bytesToChar2(byte[] bytes, int offset) {
 		char ret = 0;
@@ -148,7 +153,7 @@ public class ByteTesting {
 		}
 		return ret;
 	}
-	
+
 	/**
 	 * Converts 4 bytes from a byte array to a float.
 	 * 
@@ -157,7 +162,7 @@ public class ByteTesting {
 	 * @param offset
 	 *            - how much the first significant byte is offset in the byte
 	 *            array if the length of the array is greater than 4.
-	 * @return
+	 * @return a float derived from the passed bytes.
 	 */
 	public static float bytesToFloat4(byte[] bytes, int offset) {
 		int ret = 0;
@@ -168,7 +173,7 @@ public class ByteTesting {
 		}
 		return Float.intBitsToFloat(ret);
 	}
-	
+
 	/**
 	 * Converts 8 bytes from a byte array to a double.
 	 * 
@@ -177,7 +182,7 @@ public class ByteTesting {
 	 * @param offset
 	 *            - how much the first significant byte is offset in the byte
 	 *            array if the length of the array is greater than 8.
-	 * @return
+	 * @return a double derived from the passed bytes.
 	 */
 	public static double bytesToDouble8(byte[] bytes, int offset) {
 		long ret = 0;
@@ -188,7 +193,7 @@ public class ByteTesting {
 		}
 		return Double.longBitsToDouble(ret);
 	}
-	
+
 	/**
 	 * Converts 1 byte from a byte array to a double.
 	 * 
@@ -197,7 +202,7 @@ public class ByteTesting {
 	 * @param offset
 	 *            - how much the first significant byte is offset in the byte
 	 *            array if the length of the array is greater than 1.
-	 * @return
+	 * @return a boolean derived from the passed byte.
 	 */
 	public static boolean bytesToBoolean1(byte[] bytes, int offset) {
 		boolean ret = false;

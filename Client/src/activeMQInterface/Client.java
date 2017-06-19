@@ -29,7 +29,7 @@ public interface Client {
 	 * @param useTopics
 	 *            - true if the user wants to use a Topic, false if the user
 	 *            wants to use a Queue.
-	 * @return Returns a Producer object that can be ran via the provided data
+	 * @return a Producer object that can be ran via the provided data
 	 *         in order to write messages to a server.
 	 */
 	Producer createProducer(String address, String clientID, String destinationName, boolean useTopics);
@@ -47,7 +47,7 @@ public interface Client {
 	 * @param subscriptionName
 	 *            - the name of the client's subscription name for a given
 	 *            topic.
-	 * @return Returns a Consumer object that can be ran via the provided data
+	 * @return a Consumer object that can be ran via the provided data
 	 *         in order to connect and listen to messages on a server.
 	 */
 	Consumer createConsumer(String address, String clientID, String destinationName, String subscriptionName);
@@ -63,7 +63,7 @@ public interface Client {
 	 * @param destinationName
 	 *            - the name of the client's subscription name for a given
 	 *            queue.
-	 * @return Returns a Consumer object that can be ran via the provided data
+	 * @return a Consumer object that can be ran via the provided data
 	 *         in order to connect and listen to messages on a server.
 	 */
 	Consumer createConsumer(String address, String clientID, String destinationName);

@@ -77,19 +77,37 @@ public class ActiveMQClient extends JFrame implements Client {
 		((DefaultTableModel) table.getModel()).addRow(data);
 	}
 
+	/**
+	 * This method saves the current extent of the scrollbar in a variable.
+	 * 
+	 * @param extent
+	 *            - an int representation of the scrollbars extent.
+	 */
 	public void setExtent(int extent) {
 		this.extent = extent;
 	}
 
+	/**
+	 * This method saves the current maximum of the scrollbar in a variable.
+	 * 
+	 * @param maximum
+	 *            - an int representation of the scrollbars maximum.
+	 */
 	public void setMaximum(int maximum) {
 		this.maximum = maximum;
 	}
 
+	/**
+	 * This method saves the current value of the scrollbar in a variable.
+	 * 
+	 * @param value
+	 *            - an int representation of the scrollbars value.
+	 */
 	public void setValue(int value) {
 		this.value = value;
 	}
 
-	public void addComponentToPane(Container pane) {
+	private void addComponentToPane(Container pane) {
 
 		// CARD 1 START
 		JPanel card1 = new JPanel(new GridBagLayout());
@@ -129,7 +147,9 @@ public class ActiveMQClient extends JFrame implements Client {
 		constraints.anchor = GridBagConstraints.CENTER;
 		card1.add(connect, constraints);
 
-		// Connects to a given server
+		/**
+		 * This listener connects to a given server.
+		 */
 		connect.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -165,7 +185,7 @@ public class ActiveMQClient extends JFrame implements Client {
 				if (requests) {
 					displayMessageDialog(requestsMessage, "Requirements");
 				}
-				// If the parameters are valid, try connecting
+				// If the parameters are valid, try connecting.
 				else {
 					connect();
 				}
@@ -268,9 +288,10 @@ public class ActiveMQClient extends JFrame implements Client {
 		contents.add(left);
 		contents.add(right);
 
-		// LISTENERS
 		// MENU
-		// Provides instructions for program behavior
+		/**
+		 * This listner provides instructions for how to use the program.
+		 */
 		usage.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -288,7 +309,9 @@ public class ActiveMQClient extends JFrame implements Client {
 			}
 		});
 
-		// Removes all of the rows in the table
+		/**
+		 * this listener removes all of the rows in the table.
+		 */
 		clear.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -297,7 +320,10 @@ public class ActiveMQClient extends JFrame implements Client {
 		});
 
 		// TABLE
-		// Shows a window of the data for a row that is double-clicked
+		/**
+		 * This listener shows a window of the data for a row that is
+		 * double-clicked.
+		 */
 		table.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e) {
 				if (e.getClickCount() == 2) {
@@ -314,9 +340,15 @@ public class ActiveMQClient extends JFrame implements Client {
 			}
 		});
 
-		// Scrolls to the bottom of the table if the scroll bar is at the bottom
+		/**
+		 * This adapter scrolls to the bottom of the table if the scroll bar is
+		 * at the bottom.
+		 */
 		table.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
+				System.out.println("extent:  " + extent);
+				System.out.println("value:   " + value);
+				System.out.println("maximum: " + maximum + "\n\n");
 				if (extent == maximum - value) {
 					table.scrollRectToVisible(table.getCellRect(table.getRowCount() - 1, 0, true));
 				}
@@ -324,8 +356,10 @@ public class ActiveMQClient extends JFrame implements Client {
 		});
 
 		// BOXES/BUTTONS
-		// Listens for changes in selecting a destination from the JComboBox and
-		// disconnects if a different destination is selected
+		/**
+		 * This listener listens for changes in selecting a destination from the
+		 * JComboBox and disconnects if a different destination is selected
+		 */
 		destinationSelect.addItemListener(new ItemListener() {
 			@Override
 			public void itemStateChanged(ItemEvent e) {
@@ -346,7 +380,9 @@ public class ActiveMQClient extends JFrame implements Client {
 			}
 		});
 
-		// Allows the user to decide whether to use Topics or Queues
+		/**
+		 * This allows the user to decide whether to use Topics or Queues.
+		 */
 		destinationType.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -370,7 +406,10 @@ public class ActiveMQClient extends JFrame implements Client {
 			}
 		});
 
-		// Creates a new Topic or Queue
+		/**
+		 * This listener creates a new Topic or Queue to send or receive
+		 * messages.
+		 */
 		destinationCreate.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -392,7 +431,9 @@ public class ActiveMQClient extends JFrame implements Client {
 			}
 		});
 
-		// Allows the user to decide which message type to send
+		/**
+		 * This listener allows the user to decide which message type to send.
+		 */
 		dataType.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -406,7 +447,10 @@ public class ActiveMQClient extends JFrame implements Client {
 			}
 		});
 
-		// Sends a StreamMessage, BytesMessage, or TextMessage
+		/**
+		 * This listener sends a StreamMessage, BytesMessage, or TextMessage
+		 * depending on the selected message from the dataType button.
+		 */
 		send.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -611,8 +655,10 @@ public class ActiveMQClient extends JFrame implements Client {
 			}
 		});
 
-		// Opens a new ActiveMQConsumer thread to receive messages or closes and
-		// open one
+		/**
+		 * This listener opens a new ActiveMQConsumer thread to receive messages
+		 * or closes an open one.
+		 */
 		receive.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -652,7 +698,9 @@ public class ActiveMQClient extends JFrame implements Client {
 			}
 		});
 
-		// Refreshes the list of available destinations
+		/**
+		 * This listener refreshes the list of available destinations.
+		 */
 		refresh.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -678,7 +726,9 @@ public class ActiveMQClient extends JFrame implements Client {
 			}
 		});
 
-		// Disconnects from the server
+		/**
+		 * This listener disconnects from the server.
+		 */
 		disconnect.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -697,6 +747,9 @@ public class ActiveMQClient extends JFrame implements Client {
 		pane.add(cards, BorderLayout.CENTER);
 	}
 
+	/**
+	 * This method creates a GUI and makes it visible for user interaction.
+	 */
 	private void createAndDisplayGUI() {
 		// Create and set up the window.
 		frame = new JFrame("ActiveMQ Client");
@@ -721,6 +774,10 @@ public class ActiveMQClient extends JFrame implements Client {
 		});
 	}
 
+	/**
+	 * Checks a given server and supplies a list of Topics or Queues based on
+	 * which are being used at the moment.
+	 */
 	public void updateDestinations() {
 		model = new DefaultComboBoxModel<String>();
 		if (destinationType.getText().equals("Use: Topics")) {
@@ -749,6 +806,15 @@ public class ActiveMQClient extends JFrame implements Client {
 		destinationSelect.setModel(model);
 	}
 
+	/**
+	 * Displayes a JDialog with a JTextPane and JScrollPane for compatibility
+	 * with large amounts of text.
+	 * 
+	 * @param message
+	 *            - the message to display.
+	 * @param title
+	 *            - the title of the window.
+	 */
 	protected void displayMessageDialog(String message, String title) {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -773,14 +839,30 @@ public class ActiveMQClient extends JFrame implements Client {
 		});
 	}
 
+	/**
+	 * This method returns the current position of the thumb within the entire
+	 * length of the scrollbar.
+	 * 
+	 * @return
+	 */
 	public int getVerticalScrollBarValue() {
 		return scrollR.getVerticalScrollBar().getModel().getValue();
 	}
 
+	/**
+	 * This method returns the maximum length of the scrollbar.
+	 * 
+	 * @return
+	 */
 	public int getVerticalScrollBarMaximum() {
 		return scrollR.getVerticalScrollBar().getModel().getMaximum();
 	}
 
+	/**
+	 * This method returns the length of the visible scrollbar region.
+	 * 
+	 * @return
+	 */
 	public int getVerticalScrollBarExtent() {
 		return scrollR.getVerticalScrollBar().getModel().getExtent();
 	}
