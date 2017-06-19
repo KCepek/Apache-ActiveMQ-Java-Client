@@ -1,6 +1,5 @@
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Arrays;
 import java.util.Set;
 
 import javax.jms.JMSException;
@@ -11,16 +10,19 @@ import javax.swing.table.DefaultTableModel;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.advisory.DestinationSource;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
-import messagingInterface.Consumer;
-import messagingInterface.Producer;
-import messagingInterface.ServerMessaging;
+import activeMQInterface.Client;
+import activeMQInterface.Consumer;
+import activeMQInterface.Producer;
 
+/**
+ * ActiveMQClient implements the Client interface to provide a GUI for creating
+ * producers, consumers, and utilizing their methods.
+ */
 @SuppressWarnings("serial")
-public class Client extends JFrame implements ServerMessaging {
+public class ActiveMQClient extends JFrame implements Client {
 	// JFrame, JPanel, and Layout
 	private JFrame frame = null;
 	private JPanel cards = null;
@@ -28,7 +30,7 @@ public class Client extends JFrame implements ServerMessaging {
 
 	// Defaults
 	private String defaultURL = "tcp://localhost";
-	// private String defaultURL = "tcp://clondaq6.jlab.org";
+	private String defaultURL2 = "tcp://clondaq6.jlab.org";
 	private int defaultPort = 61616;
 
 	// GUI Components - card1
@@ -373,7 +375,7 @@ public class Client extends JFrame implements ServerMessaging {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					jd = new JDialogCustom(frame, null);
+					jd = new JDialogCustom(frame);
 					jd.setLocationRelativeTo(null);
 					jd.pack();
 					jd.setVisible(true);
@@ -697,12 +699,12 @@ public class Client extends JFrame implements ServerMessaging {
 
 	private void createAndDisplayGUI() {
 		// Create and set up the window.
-		frame = new JFrame("Client");
+		frame = new JFrame("ActiveMQ Client");
 		frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
 		// Create and set up the content pane.
-		Client client = new Client();
-		client.addComponentToPane(frame.getContentPane());
+		ActiveMQClient activeMQClient = new ActiveMQClient();
+		activeMQClient.addComponentToPane(frame.getContentPane());
 
 		// Display the window.
 		frame.pack();
@@ -766,7 +768,7 @@ public class Client extends JFrame implements ServerMessaging {
 	public static void main(String[] args) throws JMSException {
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				new Client().createAndDisplayGUI();
+				new ActiveMQClient().createAndDisplayGUI();
 			}
 		});
 	}
@@ -790,12 +792,12 @@ public class Client extends JFrame implements ServerMessaging {
 
 	@Override
 	public Consumer createConsumer(String address, String clientID, String destinationName, String subscriptionName) {
-		return new ActiveMQConsumer(address, clientID, destinationName, subscriptionName, Client.this);
+		return new ActiveMQConsumer(address, clientID, destinationName, subscriptionName, ActiveMQClient.this);
 	}
 
 	@Override
 	public Consumer createConsumer(String address, String clientID, String destinationName) {
-		return new ActiveMQConsumer(address, clientID, destinationName, Client.this);
+		return new ActiveMQConsumer(address, clientID, destinationName, ActiveMQClient.this);
 	}
 
 	@Override

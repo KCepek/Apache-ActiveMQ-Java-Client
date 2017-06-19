@@ -1,6 +1,6 @@
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-import messagingInterface.Producer;
+import activeMQInterface.Producer;
 
 import java.io.UnsupportedEncodingException;
 
@@ -13,6 +13,11 @@ import javax.jms.Session;
 import javax.jms.StreamMessage;
 import javax.jms.TextMessage;
 
+/**
+ * ActiveMQProducer implements Runnable to allow process-based threading. This
+ * class also implements the Producer interface to create a JMS Producer for
+ * Apache ActiveMQ.
+ */
 public class ActiveMQProducer implements Runnable, Producer {
 
 	private String address = null;
@@ -71,6 +76,7 @@ public class ActiveMQProducer implements Runnable, Producer {
 	@Override
 	public void sendBooleanStreamMessage(int size, boolean... args) throws JMSException {
 		StreamMessage message = session.createStreamMessage();
+		// message.setStringProperty("Group", "TestGroup2");
 		message.writeInt(size);
 		for (boolean arg : args) {
 			message.writeBoolean(arg);

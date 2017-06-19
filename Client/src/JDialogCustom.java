@@ -4,7 +4,12 @@ import javax.swing.JTextField;
 import java.beans.*; //property change stuff
 import java.awt.*;
 import java.awt.event.*;
- 
+
+/**
+ * JDialogCustom extends JDialog and implements ActionListener and
+ * PropertyChangeListener to create a custom JDialog that has a JTextField and
+ * customizable buttons.
+ */
 @SuppressWarnings("serial")
 public class JDialogCustom extends JDialog implements ActionListener, PropertyChangeListener {
 
@@ -20,8 +25,13 @@ public class JDialogCustom extends JDialog implements ActionListener, PropertyCh
 		return typedText;
 	}
 
-	/** Creates the reusable dialog. */
-	public JDialogCustom(Frame frame, JDialogCustom parent) {
+	/**
+	 * Creates a JDialog with a JTextField option for inputting text.
+	 * 
+	 * @param frame
+	 *            - the frame to add the custom JDialog to.
+	 */
+	public JDialogCustom(Frame frame) {
 		super(frame, true);
 
 		setTitle("Create Topic");
@@ -69,12 +79,18 @@ public class JDialogCustom extends JDialog implements ActionListener, PropertyCh
 		optionPane.addPropertyChangeListener(this);
 	}
 
-	/** This method handles events for the text field. */
+	/**
+	 * This method handles ActionEvents from the JTextField.
+	 */
 	public void actionPerformed(ActionEvent e) {
 		optionPane.setValue(button1);
 	}
 
-	/** This method reacts to state changes in the option pane. */
+	/**
+	 * This method reacts to state changes. Provided that the text in the
+	 * JTextField is not blank, it will be returned. If the text in the
+	 * JTextField is blank, a window will pop up asking the user to try again.
+	 */
 	public void propertyChange(PropertyChangeEvent e) {
 		String prop = e.getPropertyName();
 
@@ -100,8 +116,8 @@ public class JDialogCustom extends JDialog implements ActionListener, PropertyCh
 					clearAndHide();
 				} else {
 					// text was invalid
-					JOptionPane.showMessageDialog(JDialogCustom.this, "The Topic should not be blank.", "Try Again",
-							JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(JDialogCustom.this, "The Destination should not be blank.",
+							"Try Again", JOptionPane.ERROR_MESSAGE);
 					typedText = null;
 					textField.requestFocusInWindow();
 				}
@@ -112,7 +128,9 @@ public class JDialogCustom extends JDialog implements ActionListener, PropertyCh
 		}
 	}
 
-	/** This method clears the dialog and hides it. */
+	/**
+	 * This method clears the text in the JTextField and hides it.
+	 */
 	public void clearAndHide() {
 		textField.setText(null);
 		setVisible(false);

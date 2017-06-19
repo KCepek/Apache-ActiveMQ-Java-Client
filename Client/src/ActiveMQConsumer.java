@@ -17,8 +17,14 @@ import javax.jms.Topic;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 
-import messagingInterface.Consumer;
+import activeMQInterface.Consumer;
 
+/**
+ * ActiveMQConsumer implements Runnable to allow process-based threading and
+ * MessageListener to listen to messages from a server. This class also
+ * implements the Consumer interface to create a JMS Consumer for Apache
+ * ActiveMQ.
+ */
 public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 	private String address = null;
 	private String clientID = null;
@@ -33,24 +39,30 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 	private Queue queue = null;
 	private MessageConsumer messageConsumer = null;
 
-	private Client client;
+	private ActiveMQClient activeMQClient;
 
 	public ActiveMQConsumer(String address, String clientID, String destinationName, String subscriptionName,
-			Client client) {
+			ActiveMQClient activeMQClient) {
 		this.address = address;
 		this.clientID = clientID;
 		this.destinationName = destinationName;
 		this.subscriptionName = subscriptionName;
-		this.client = client;
+		this.activeMQClient = activeMQClient;
 	}
 
-	public ActiveMQConsumer(String address, String clientID, String destinationName, Client client) {
+	public ActiveMQConsumer(String address, String clientID, String destinationName, ActiveMQClient activeMQClient) {
 		this.address = address;
 		this.clientID = clientID;
 		this.destinationName = destinationName;
-		this.client = client;
+		this.activeMQClient = activeMQClient;
 	}
 
+	/**
+	 * This method returns a boolean to tell whether the Consumer is connected
+	 * to the server or not.
+	 * 
+	 * @return
+	 */
 	public boolean isConnected() {
 		return isConnected;
 	}
@@ -73,9 +85,10 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 			// MessageConsumer
 			if (subscriptionName != null) {
 				// A durable subscriber is created to read Topic messages when
-				// the client is offline
+				// the activeMQClient is offline
 				topic = session.createTopic(destinationName);
-				messageConsumer = session.createDurableSubscriber(topic, subscriptionName);
+				messageConsumer = session.createDurableSubscriber(topic,
+						subscriptionName/* , "Group = 'TestGroup2'", false */);
 			} else {
 				queue = session.createQueue(destinationName);
 				messageConsumer = session.createConsumer(queue);
@@ -96,9 +109,18 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 	@Override
 	public void onMessage(Message message) {
 		try {
-			client.setExtent(client.getVerticalScrollBarExtent());
-			client.setValue(client.getVerticalScrollBarValue());
-			client.setMaximum(client.getVerticalScrollBarMaximum());
+			// if (message.propertyExists("Group") &&
+			// message.getStringProperty("Group").equals("Test Group 2")) {
+			// System.out.println("Yes");
+			// String[] testArray = new String[]{"Hey, we can send specific",
+			// "messages via selectors for PTP."};
+			// activeMQClient.insertData(new Object[] { "byte[]",
+			// Arrays.toString(testArray), testArray });
+			// }
+
+			activeMQClient.setExtent(activeMQClient.getVerticalScrollBarExtent());
+			activeMQClient.setValue(activeMQClient.getVerticalScrollBarValue());
+			activeMQClient.setMaximum(activeMQClient.getVerticalScrollBarMaximum());
 
 			if (message instanceof StreamMessage) {
 				StreamMessage streamMessage = (StreamMessage) message;
@@ -156,54 +178,54 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 						for (int i = 0; i < size; i++) {
 							values[i] = bytesMessage.readBoolean();
 						}
-						client.insertData(new Object[] { "boolean[]", Arrays.toString(values), values });
+						activeMQClient.insertData(new Object[] { "boolean[]", Arrays.toString(values), values });
 					} else if (type == 2) {
 						byte[] values = new byte[size];
 						for (int i = 0; i < size; i++) {
 							values[i] = bytesMessage.readByte();
 						}
-						client.insertData(new Object[] { "byte[]", Arrays.toString(values), values });
+						activeMQClient.insertData(new Object[] { "byte[]", Arrays.toString(values), values });
 					} else if (type == 3) {
 						char[] values = new char[size];
 						for (int i = 0; i < size; i++) {
 							values[i] = (char) bytesMessage.readByte();
 						}
-						client.insertData(new Object[] { "char[]", Arrays.toString(values), values });
+						activeMQClient.insertData(new Object[] { "char[]", Arrays.toString(values), values });
 					} else if (type == 4) {
 						short[] values = new short[size];
 						for (int i = 0; i < size; i++) {
 							values[i] = bytesMessage.readShort();
 						}
-						client.insertData(new Object[] { "short[]", Arrays.toString(values), values });
+						activeMQClient.insertData(new Object[] { "short[]", Arrays.toString(values), values });
 					} else if (type == 5) {
 						int[] values = new int[size];
 						for (int i = 0; i < size; i++) {
 							values[i] = bytesMessage.readInt();
 						}
-						client.insertData(new Object[] { "int[]", Arrays.toString(values), values });
+						activeMQClient.insertData(new Object[] { "int[]", Arrays.toString(values), values });
 					} else if (type == 6) {
 						long[] values = new long[size];
 						for (int i = 0; i < size; i++) {
 							values[i] = bytesMessage.readLong();
 						}
-						client.insertData(new Object[] { "long[]", Arrays.toString(values), values });
+						activeMQClient.insertData(new Object[] { "long[]", Arrays.toString(values), values });
 					} else if (type == 7) {
 						double[] values = new double[size];
 						for (int i = 0; i < size; i++) {
 							values[i] = bytesMessage.readDouble();
 						}
-						client.insertData(new Object[] { "double[]", Arrays.toString(values), values });
+						activeMQClient.insertData(new Object[] { "double[]", Arrays.toString(values), values });
 					} else if (type == 8) {
 						float[] values = new float[size];
 						for (int i = 0; i < size; i++) {
 							values[i] = bytesMessage.readFloat();
 						}
-						client.insertData(new Object[] { "float[]", Arrays.toString(values), values });
+						activeMQClient.insertData(new Object[] { "float[]", Arrays.toString(values), values });
 					}
 				} catch (MessageEOFException noMoreData) {
 					String error = "Caught while receiving data from the ActiveMQConsumer:\n\n" + noMoreData + "\n";
 					error += noMoreData.getStackTrace();
-					client.displayMessageDialog(error, "Error");
+					activeMQClient.displayMessageDialog(error, "Error");
 				}
 				// BytesMessage bytesMessage = (BytesMessage) message;
 				// byte[] values = null;
@@ -215,28 +237,43 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 				//
 				// bytesMessage.readBytes(values);
 				//
-				// client.insertData(new Object[] { "byte[]",
+				// activeMQClient.insertData(new Object[] { "byte[]",
 				// Arrays.toString(values), values });
 				// } catch (MessageEOFException noMoreData) {
 				// String error = "Caught while receiving data from the
 				// ActiveMQConsumer:\n\n" + noMoreData + "\n";
 				// error += noMoreData.getStackTrace();
-				// client.displayMessageDialog(error, "Error");
+				// activeMQClient.displayMessageDialog(error, "Error");
 				// }
 
 			} else if (message instanceof TextMessage) {
 				TextMessage textMessage = (TextMessage) message;
 				String text = textMessage.getText();
 				Object[] data = new Object[] { "String", text };
-				client.insertData(data);
+				activeMQClient.insertData(data);
 			}
 		} catch (JMSException err) {
 			String error = "Caught while receiving data from the ActiveMQConsumer:\n\n" + err + "\n";
 			error += err.getStackTrace();
-			client.displayMessageDialog(error, "Error");
+			activeMQClient.displayMessageDialog(error, "Error");
 		}
 	}
 
+	/**
+	 * This method takes information to insert into a table in the
+	 * ActiveMQClient GUI.
+	 * 
+	 * @param values
+	 *            - the values to insert into a table.
+	 * @param type
+	 *            - the type of the values to be inserted into the table given
+	 *            that oneType is true.
+	 * @param oneType
+	 *            - a boolean indicating whether all of the values in the Object
+	 *            array are of the same type. If they are, then the data
+	 *            inserted into the table will indicate that they are all of the
+	 *            same type.
+	 */
 	public void fillClientTable(Object[] values, Object type, boolean oneType) {
 		if (oneType) {
 			int sizeN = values.length;
@@ -247,7 +284,7 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 						valuesN[i] = (boolean) values[i];
 					}
 				}
-				client.insertData(new Object[] { "boolean[]", Arrays.toString(valuesN), valuesN });
+				activeMQClient.insertData(new Object[] { "boolean[]", Arrays.toString(valuesN), valuesN });
 			} else if (type instanceof Byte) {
 				byte[] valuesN = new byte[sizeN];
 				for (int i = 0; i < sizeN; i++) {
@@ -255,7 +292,7 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 						valuesN[i] = (byte) values[i];
 					}
 				}
-				client.insertData(new Object[] { "byte[]", Arrays.toString(valuesN), valuesN });
+				activeMQClient.insertData(new Object[] { "byte[]", Arrays.toString(valuesN), valuesN });
 			} else if (type instanceof Character) {
 				// char[] valuesN = ((String) values[0]).toCharArray();
 				char[] valuesN = new char[sizeN];
@@ -264,7 +301,7 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 						valuesN[i] = (char) values[i];
 					}
 				}
-				client.insertData(new Object[] { "char[]", Arrays.toString(valuesN), valuesN });
+				activeMQClient.insertData(new Object[] { "char[]", Arrays.toString(valuesN), valuesN });
 			} else if (type instanceof Short) {
 				short[] valuesN = new short[sizeN];
 				for (int i = 0; i < sizeN; i++) {
@@ -272,7 +309,7 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 						valuesN[i] = (short) values[i];
 					}
 				}
-				client.insertData(new Object[] { "short[]", Arrays.toString(valuesN), valuesN });
+				activeMQClient.insertData(new Object[] { "short[]", Arrays.toString(valuesN), valuesN });
 			} else if (type instanceof Integer) {
 				int[] valuesN = new int[sizeN];
 				for (int i = 0; i < sizeN; i++) {
@@ -280,7 +317,7 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 						valuesN[i] = (int) values[i];
 					}
 				}
-				client.insertData(new Object[] { "int[]", Arrays.toString(valuesN), valuesN });
+				activeMQClient.insertData(new Object[] { "int[]", Arrays.toString(valuesN), valuesN });
 			} else if (type instanceof Long) {
 				long[] valuesN = new long[sizeN];
 				for (int i = 0; i < sizeN; i++) {
@@ -288,7 +325,7 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 						valuesN[i] = (long) values[i];
 					}
 				}
-				client.insertData(new Object[] { "long[]", Arrays.toString(valuesN), valuesN });
+				activeMQClient.insertData(new Object[] { "long[]", Arrays.toString(valuesN), valuesN });
 			} else if (type instanceof Double) {
 				double[] valuesN = new double[sizeN];
 				for (int i = 0; i < sizeN; i++) {
@@ -296,7 +333,7 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 						valuesN[i] = (double) values[i];
 					}
 				}
-				client.insertData(new Object[] { "double[]", Arrays.toString(valuesN), valuesN });
+				activeMQClient.insertData(new Object[] { "double[]", Arrays.toString(valuesN), valuesN });
 			} else if (type instanceof Float) {
 				float[] valuesN = new float[sizeN];
 				for (int i = 0; i < sizeN; i++) {
@@ -304,17 +341,19 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 						valuesN[i] = (float) values[i];
 					}
 				}
-				client.insertData(new Object[] { "float[]", Arrays.toString(valuesN), valuesN });
+				activeMQClient.insertData(new Object[] { "float[]", Arrays.toString(valuesN), valuesN });
 			}
 		} else {
-			client.insertData(new Object[] { "Object[]", Arrays.toString(values), values });
+			activeMQClient.insertData(new Object[] { "Object[]", Arrays.toString(values), values });
 		}
 	}
 
 	@Override
 	public void unsubscribe() throws JMSException {
-		messageConsumer.close();
-		session.unsubscribe(subscriptionName);
+		if (subscriptionName != null) {
+			messageConsumer.close();
+			session.unsubscribe(subscriptionName);
+		}
 	}
 
 	@Override
