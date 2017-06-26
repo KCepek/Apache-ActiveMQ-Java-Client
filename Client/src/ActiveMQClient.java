@@ -30,7 +30,7 @@ public class ActiveMQClient extends JFrame implements Client {
 
 	// Defaults
 	private String defaultURL = "tcp://localhost";
-	private String defaultURL2 = "tcp://clondaq6.jlab.org";
+	//private String defaultURL = "tcp://clondaq6.jlab.org";
 	private int defaultPort = 61616;
 
 	// GUI Components - card1
@@ -248,12 +248,12 @@ public class ActiveMQClient extends JFrame implements Client {
 		constraints2.insets = new Insets(20, 0, 20, 0);
 
 		// Add components
+		constraints2.fill = GridBagConstraints.HORIZONTAL;
 		constraints2.ipadx = 75;
 		constraints2.ipady = 6;
 
 		constraints2.gridx = 1;
 		constraints2.gridy = 0;
-		constraints2.fill = GridBagConstraints.HORIZONTAL;
 		right.add(destinationType, constraints2);
 
 		constraints2.gridy = 1;
@@ -346,9 +346,6 @@ public class ActiveMQClient extends JFrame implements Client {
 		 */
 		table.addComponentListener(new ComponentAdapter() {
 			public void componentResized(ComponentEvent e) {
-				System.out.println("extent:  " + extent);
-				System.out.println("value:   " + value);
-				System.out.println("maximum: " + maximum + "\n\n");
 				if (extent == maximum - value) {
 					table.scrollRectToVisible(table.getCellRect(table.getRowCount() - 1, 0, true));
 				}
