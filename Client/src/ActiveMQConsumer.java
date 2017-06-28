@@ -88,7 +88,7 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 				// the activeMQClient is offline
 				topic = session.createTopic(destinationName);
 				messageConsumer = session.createDurableSubscriber(topic,
-						subscriptionName/* , "Group = 'TestGroup2'", false */);
+						subscriptionName/*, "Group = '" + clientID + "'", false*/);
 			} else {
 				queue = session.createQueue(destinationName);
 				messageConsumer = session.createConsumer(queue);

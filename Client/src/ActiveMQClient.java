@@ -3,6 +3,7 @@ import java.awt.event.*;
 import java.util.Set;
 
 import javax.jms.JMSException;
+import javax.jms.MessageConsumer;
 import javax.jms.Session;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -30,7 +31,7 @@ public class ActiveMQClient extends JFrame implements Client {
 
 	// Defaults
 	private String defaultURL = "tcp://localhost";
-	//private String defaultURL = "tcp://clondaq6.jlab.org";
+	// private String defaultURL = "tcp://clondaq6.jlab.org";
 	private int defaultPort = 61616;
 
 	// GUI Components - card1
@@ -70,9 +71,29 @@ public class ActiveMQClient extends JFrame implements Client {
 	private Set<ActiveMQTopic> topics = null;
 	private Set<ActiveMQQueue> queues = null;
 	private DefaultComboBoxModel<String> model = null;
+	private MessageConsumer messageConsumer = null;
 	private ActiveMQConsumer activeMQConsumer = null;
 	private ActiveMQProducer activeMQProducer = null;
 
+	/**
+	 * This method sends the statistics for all of the Client's open
+	 * connections, i.e. its Consumers and Producers
+	 * 
+	 * @return a String array representing all of the connection info available
+	 *         (no passwords).
+	 */
+	public String[] getAdvisorStats() {
+		// TODO
+		return null;
+	}
+
+	/**
+	 * This method inserts data into the table.
+	 * 
+	 * @param data
+	 *            - an Object array of three other pieces of data, usually
+	 *            represented as two Strings and an array of any primitive type.
+	 */
 	public void insertData(Object[] data) {
 		((DefaultTableModel) table.getModel()).addRow(data);
 	}
@@ -899,6 +920,9 @@ public class ActiveMQClient extends JFrame implements Client {
 			queues = ds.getQueues();
 
 			updateDestinations();
+			
+			// Create a Consumer to receive requests from the Advisor
+			messageConsumer = session.createConsumer(session.createTopic("ActiveMQ.Advisory.Advisor"));
 
 			// Display ActiveMQConsumer and ActiveMQProducer settings
 			cardLayout.show(cards, "2");

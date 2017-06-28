@@ -180,11 +180,12 @@ public class ActiveMQAdvisor extends JFrame implements MessageListener {
 		// CARD 1 END
 
 		// CARD 2 START
-		JPanel card2 = new JPanel(new BorderLayout());
+		JPanel card2 = new JPanel();
+		card2.setLayout(new BoxLayout(card2, BoxLayout.Y_AXIS));
 
 		// Menu
 		JMenuBar menuBar = new JMenuBar();
-
+		
 		JMenu helpMenu = new JMenu("Help");
 		JMenuItem usage = helpMenu.add("How to Use");
 		menuBar.add(helpMenu);
@@ -192,15 +193,10 @@ public class ActiveMQAdvisor extends JFrame implements MessageListener {
 		JMenu editMenu = new JMenu("Edit");
 		JMenuItem clear = editMenu.add("Clear");
 		menuBar.add(editMenu);
+		
+		menuBar.add(Box.createHorizontalGlue(), Box.LEFT_ALIGNMENT);
 
-		card2.add(menuBar, BorderLayout.NORTH);
-
-		// Contents
-		JPanel contents = new JPanel(new GridLayout());
-		card2.add(contents);
-
-		JPanel left = new JPanel();
-		left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
+		card2.add(menuBar);
 
 		DefaultTableModel modelR = new DefaultTableModel() {
 			@Override
@@ -213,16 +209,16 @@ public class ActiveMQAdvisor extends JFrame implements MessageListener {
 		modelR.addColumn("Remote Address");
 		modelR.addColumn("Actual Data");
 		table = new JTable(modelR);
-		table.setPreferredScrollableViewportSize(new Dimension(500, 500));
+		table.setPreferredScrollableViewportSize(new Dimension(800, 500));
 		table.setFillsViewportHeight(true);
 		table.setRowHeight(20);
 
 		table.removeColumn(table.getColumnModel().getColumn(2));
 
 		scrollR = new JScrollPane(table);
-		left.add(scrollR);
+		card2.add(scrollR);
 
-		JPanel right = new JPanel(new GridBagLayout());
+		JPanel buttons = new JPanel(new GridBagLayout());
 
 		// Create the constraints
 		GridBagConstraints constraints2 = new GridBagConstraints();
@@ -236,20 +232,19 @@ public class ActiveMQAdvisor extends JFrame implements MessageListener {
 		constraints2.gridx = 1;
 		constraints2.gridy = 0;
 		disconnect = new JButton("Disconnect");
-		right.add(disconnect, constraints2);
+		buttons.add(disconnect, constraints2);
 
-		contents.add(left);
-		contents.add(right);
+		card2.add(buttons);
 
 		// MENU
 		/**
-		 * This listner provides instructions for how to use the program.
+		 * This listener provides instructions for how to use the program.
 		 */
 		usage.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				displayMessageDialog(
-						"This program receives messages form the advisory topics on the server for the purpose of displaying connection information.  Once connected, information should be shown automatically.  In order to receive information from before this program is started, it needs to run with the a client ID before the information is sent to the broker, since the client ID needs to be subscribed to have messages saved while this program is not active.",
+						"This program receives messages from an advisory topic on the server for the purpose of displaying connection information.  Once connected, information should be shown automatically.  In order to receive information from before this program is started, it needs to run with the a client ID before the information is sent to the broker, since the client ID needs to be subscribed to have messages saved while this program is not active.",
 						"How to Use");
 			}
 		});
@@ -447,12 +442,14 @@ public class ActiveMQAdvisor extends JFrame implements MessageListener {
 	}
 
 	@Override
-	public void onMessage(Message msg) {
-		if (msg instanceof ActiveMQMessage) {
-			ActiveMQMessage aMsg = (ActiveMQMessage) msg;
-			System.out.println(aMsg.getConnection().getConnectionStats().getStartTime());
-			ConnectionInfo info = (ConnectionInfo) aMsg.getDataStructure();
-			insertData(new Object[] { info.getClientId(), info.getClientIp(), aMsg });
+	public void onMessage(Message message) {
+		if (message instanceof ActiveMQMessage) {
+			ActiveMQMessage aMessage = (ActiveMQMessage) message;
+			if (aMessage.getDataStructure() instanceof ConnectionInfo) {
+				System.out.println("nice");
+				ConnectionInfo info = (ConnectionInfo) aMessage.getDataStructure();
+				insertData(new Object[] { info.getClientId(), info.getClientIp(), aMessage });
+			}
 		}
 	}
 }
