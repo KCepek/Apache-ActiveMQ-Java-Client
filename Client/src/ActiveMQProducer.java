@@ -32,15 +32,47 @@ public class ActiveMQProducer implements Runnable, Producer {
 	private Destination destination = null;
 	private MessageProducer messageProducer = null;
 
+	private TimeKeeper time = null;
+
 	public ActiveMQProducer(String address, String clientID, String destinationName, boolean useTopics) {
 		this.address = address;
 		this.clientID = clientID;
 		this.destinationName = destinationName;
 		this.useTopics = useTopics;
 	}
+	
+	/**
+	 * This method returns the ClientID of the ActiveMQProducer as a way to
+	 * identify the connection.
+	 * 
+	 * @return a String representation of the ClientID. If one is not provided,
+	 *         ActiveMQ will randomly generate one with information from the
+	 *         computer it is ran on.
+	 * @throws JMSException
+	 */
+	public String getID() throws JMSException {
+		return connection.getClientID();
+	}
 
+	/**
+	 * This method returns a boolean to tell whether the Producer is connected
+	 * to the server or not.
+	 * 
+	 * @return a boolean value for whether the Producer is connected.
+	 */
 	public boolean isConnected() {
 		return isConnected;
+	}
+
+	/**
+	 * This method returns a time in the format of X-XX:XX:XX.XXXX
+	 * (days-hours:minutes:seconds.miliseconds).
+	 * 
+	 * @return a String value of the formatted time passed since run() was
+	 *         called.
+	 */
+	public String getBaseTime() {
+		return time.getBaseTime();
 	}
 
 	@Override
@@ -66,6 +98,10 @@ public class ActiveMQProducer implements Runnable, Producer {
 
 			// Create a MessageProducer to send messages to
 			messageProducer = session.createProducer(destination);
+			
+			// Start the connection
+			connection.start();
+			time = new TimeKeeper();
 
 		} catch (Exception e) {
 			System.out.println("Caught: " + e);

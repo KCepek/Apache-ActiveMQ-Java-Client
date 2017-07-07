@@ -1,3 +1,5 @@
+import java.util.concurrent.TimeUnit;
+
 /**
  * TimeKeeper is a stopwatch-like class that keeps track of the time passed when
  * a TimeKeeper object is instantiated. It uses System.nanoTime(), which
@@ -47,7 +49,30 @@ public class TimeKeeper {
 		long baseSeconds = (endTime - startTime) / 1000000000;
 		long miliSeconds = (endTime - startTime) % 1000000000;
 
-		return days + " " + String.format("%02d", hours) + ":" + String.format("%02d", minutes) + ":"
+		return days + "-" + String.format("%02d", hours) + ":" + String.format("%02d", minutes) + ":"
 				+ String.format("%02d", baseSeconds) + "." + String.format("%4.4s", "" + miliSeconds);
+	}
+	
+	public static void main(String[] args) throws InterruptedException {
+		TimeKeeper t = new TimeKeeper();
+		TimeUnit.SECONDS.sleep(1);
+		TimeUnit.SECONDS.sleep(1);
+		TimeUnit.SECONDS.sleep(1);
+		System.out.println(t.getBaseTime());
+		TimeUnit.SECONDS.sleep(1);
+		TimeUnit.SECONDS.sleep(1);
+		System.out.println(t.getBaseTime());
+		TimeUnit.SECONDS.sleep(1);
+		TimeUnit.SECONDS.sleep(1);
+		System.out.println(t.getBaseTime());
+		TimeUnit.SECONDS.sleep(1);
+		TimeUnit.SECONDS.sleep(1);
+		System.out.println(t.getBaseTime());
+		TimeUnit.SECONDS.sleep(1);
+		TimeUnit.SECONDS.sleep(1);
+		System.out.println(t.getBaseTime());
+		TimeUnit.SECONDS.sleep(1);
+		TimeUnit.SECONDS.sleep(1);
+		System.out.println(t.getBaseTime());
 	}
 }

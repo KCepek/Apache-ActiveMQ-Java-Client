@@ -6,8 +6,7 @@ package activeMQInterface;
  */
 public interface Client {
 	/**
-	 * This method creates a connection to the server for monitoring purposes
-	 * (has no MessageProducer or MessageConsumer).
+	 * This method creates a connection to the server for monitoring purposes.
 	 */
 	void connect();
 

@@ -39,6 +39,8 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 	private Queue queue = null;
 	private MessageConsumer messageConsumer = null;
 
+	private TimeKeeper time = null;
+
 	private ActiveMQClient activeMQClient;
 
 	public ActiveMQConsumer(String address, String clientID, String destinationName, String subscriptionName,
@@ -58,6 +60,19 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 	}
 
 	/**
+	 * This method returns the ClientID of the ActiveMQConsumer as a way to
+	 * identify the connection.
+	 * 
+	 * @return a String representation of the ClientID. If one is not provided,
+	 *         ActiveMQ will randomly generate one with information from the
+	 *         computer it is ran on.
+	 * @throws JMSException
+	 */
+	public String getID() throws JMSException {
+		return connection.getClientID();
+	}
+
+	/**
 	 * This method returns a boolean to tell whether the Consumer is connected
 	 * to the server or not.
 	 * 
@@ -65,6 +80,17 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 	 */
 	public boolean isConnected() {
 		return isConnected;
+	}
+
+	/**
+	 * This method returns a time in the format of X-XX:XX:XX.XXXX
+	 * (days-hours:minutes:seconds.miliseconds).
+	 * 
+	 * @return a String value of the formatted time passed since run() was
+	 *         called.
+	 */
+	public String getBaseTime() {
+		return time.getBaseTime();
 	}
 
 	@Override
@@ -88,21 +114,25 @@ public class ActiveMQConsumer implements Runnable, MessageListener, Consumer {
 				// the activeMQClient is offline
 				topic = session.createTopic(destinationName);
 				messageConsumer = session.createDurableSubscriber(topic,
-						subscriptionName/*, "Group = '" + clientID + "'", false*/);
+						subscriptionName/*
+										 * , "Group = '" + clientID + "'", false
+										 */);
 			} else {
 				queue = session.createQueue(destinationName);
 				messageConsumer = session.createConsumer(queue);
 			}
 
-			// Start the connection
-			connection.start();
-
 			// MessageListener processes received messages
 			messageConsumer.setMessageListener(this);
+
+			// Start the connection
+			connection.start();
+			time = new TimeKeeper();
 
 		} catch (Exception e) {
 			System.out.println("Caught: " + e);
 			e.printStackTrace();
+			time = null;
 		}
 	}
 

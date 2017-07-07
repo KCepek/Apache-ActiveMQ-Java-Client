@@ -2,9 +2,15 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.Set;
 
+import javax.jms.BytesMessage;
+import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 
@@ -23,7 +29,7 @@ import activeMQInterface.Producer;
  * producers, consumers, and utilizing their methods.
  */
 @SuppressWarnings("serial")
-public class ActiveMQClient extends JFrame implements Client {
+public class ActiveMQClient extends JFrame implements Client, MessageListener {
 	// JFrame, JPanel, and Layout
 	private JFrame frame = null;
 	private JPanel cards = null;
@@ -72,19 +78,34 @@ public class ActiveMQClient extends JFrame implements Client {
 	private Set<ActiveMQQueue> queues = null;
 	private DefaultComboBoxModel<String> model = null;
 	private MessageConsumer messageConsumer = null;
+	private MessageProducer messageProducer = null;
 	private ActiveMQConsumer activeMQConsumer = null;
 	private ActiveMQProducer activeMQProducer = null;
 
+	private TimeKeeper time = null;
+
 	/**
 	 * This method sends the statistics for all of the Client's open
-	 * connections, i.e. its Consumers and Producers
+	 * connections, i.e. its Consumers and Producers.
 	 * 
 	 * @return a String array representing all of the connection info available
 	 *         (no passwords).
+	 * 
+	 * @throws JMSException
+	 *             a JMSException will be thrown given that the connection to
+	 *             the server is not open.
 	 */
-	public String[] getAdvisorStats() {
-		// TODO
-		return null;
+	public String[] getAdvisorStats() throws JMSException {
+		String[] stats = new String[3];
+		stats[0] = time.getBaseTime() + " " + connection.getClientID();
+		if (activeMQConsumer != null && activeMQConsumer.isConnected()) {
+			stats[1] = activeMQConsumer.getBaseTime() + " " + activeMQConsumer.getID();
+		}
+		if (activeMQProducer != null) {
+			stats[2] = activeMQProducer.getBaseTime() + " " + activeMQProducer.getID();
+		}
+
+		return stats;
 	}
 
 	/**
@@ -128,6 +149,13 @@ public class ActiveMQClient extends JFrame implements Client {
 		this.value = value;
 	}
 
+	/**
+	 * Adds components to panes for the GUI.
+	 * 
+	 * @param pane
+	 *            The Container to add to the GUI to display all of the added
+	 *            JFrame objects.
+	 */
 	private void addComponentToPane(Container pane) {
 
 		// CARD 1 START
@@ -273,7 +301,7 @@ public class ActiveMQClient extends JFrame implements Client {
 		constraints2.ipadx = 75;
 		constraints2.ipady = 6;
 
-		constraints2.gridx = 1;
+		constraints2.gridx = 0;
 		constraints2.gridy = 0;
 		right.add(destinationType, constraints2);
 
@@ -311,7 +339,7 @@ public class ActiveMQClient extends JFrame implements Client {
 
 		// MENU
 		/**
-		 * This listner provides instructions for how to use the program.
+		 * This listener provides instructions for how to use the program.
 		 */
 		usage.addActionListener(new ActionListener() {
 			@Override
@@ -376,7 +404,7 @@ public class ActiveMQClient extends JFrame implements Client {
 		// BOXES/BUTTONS
 		/**
 		 * This listener listens for changes in selecting a destination from the
-		 * JComboBox and disconnects if a different destination is selected
+		 * JComboBox and disconnects if a different destination is selected.
 		 */
 		destinationSelect.addItemListener(new ItemListener() {
 			@Override
@@ -722,6 +750,18 @@ public class ActiveMQClient extends JFrame implements Client {
 		refresh.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				try {
+					getAdvisorStats();
+				} catch (JMSException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+
+				// if (activeMQConsumer != null && activeMQProducer != null) {
+				// insertData(new Object[] { "Time Test",
+				// activeMQConsumer.getBaseTime() + " " +
+				// activeMQProducer.getBaseTime(), "test" });
+				// }
 
 				// BrokerService broker = new BrokerService();
 				// try {
@@ -861,7 +901,7 @@ public class ActiveMQClient extends JFrame implements Client {
 	 * This method returns the current position of the thumb within the entire
 	 * length of the scrollbar.
 	 * 
-	 * @return
+	 * @return - an int value to represent the value of the scrollbar.
 	 */
 	public int getVerticalScrollBarValue() {
 		return scrollR.getVerticalScrollBar().getModel().getValue();
@@ -870,7 +910,7 @@ public class ActiveMQClient extends JFrame implements Client {
 	/**
 	 * This method returns the maximum length of the scrollbar.
 	 * 
-	 * @return
+	 * @return - an int value to represent the maximum of the scrollbar.
 	 */
 	public int getVerticalScrollBarMaximum() {
 		return scrollR.getVerticalScrollBar().getModel().getMaximum();
@@ -879,7 +919,7 @@ public class ActiveMQClient extends JFrame implements Client {
 	/**
 	 * This method returns the length of the visible scrollbar region.
 	 * 
-	 * @return
+	 * @return - an int value to represent the extent of the scrollbar.
 	 */
 	public int getVerticalScrollBarExtent() {
 		return scrollR.getVerticalScrollBar().getModel().getExtent();
@@ -906,10 +946,9 @@ public class ActiveMQClient extends JFrame implements Client {
 			// Initialize ConnectionFactory
 			connectionFactory = new ActiveMQConnectionFactory(addressText);
 
-			// Initialize and Start Connection
+			// Initialize the Connection
 			connection = (ActiveMQConnection) connectionFactory.createConnection();
 			connection.setClientID("");
-			connection.start();
 
 			// Initialize Session
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -920,12 +959,27 @@ public class ActiveMQClient extends JFrame implements Client {
 			queues = ds.getQueues();
 
 			updateDestinations();
-			
+
 			// Create a Consumer to receive requests from the Advisor
-			messageConsumer = session.createConsumer(session.createTopic("ActiveMQ.Advisory.Advisor"));
+			Destination advisoryDestination = session.createTopic("ActiveMQ.Advisory.Advisor");
+			messageConsumer = session.createConsumer(advisoryDestination);
+			messageConsumer.setMessageListener(this);
+
+			// Create a Producer for responding to requests on the
+			// ActiveMQ.Advisory.Advisor Topic.
+			messageProducer = session.createProducer(advisoryDestination);
+
+			// Start the connection
+			connection.start();
+			time = new TimeKeeper();
 
 			// Display ActiveMQConsumer and ActiveMQProducer settings
 			cardLayout.show(cards, "2");
+
+			// System.out.println(connection.getConnectionInfo().getConnectionId());
+			// System.out.println(connection.getConnectionInfo().getClientId());
+			// System.out.println(connection.getConnectionInfo().getClientIp());
+			// System.out.println(connection.getStats().getLastSampleTime());
 
 		} catch (Exception err) {
 			String error = "Caught while connecting:\n\n" + err + "\n";
@@ -953,6 +1007,43 @@ public class ActiveMQClient extends JFrame implements Client {
 			String error = "Caught while closing:\n\n" + err + "\n";
 			error += err.getStackTrace();
 			displayMessageDialog(error, "Error");
+		}
+	}
+
+	/**
+	 * A method from an implementation of MessageListener to receive and
+	 * evaluate various JMS messages.
+	 * 
+	 * @param message
+	 *            - the message that is received from the server.
+	 */
+	@Override
+	public void onMessage(Message message) {
+		// Use the Client Consumer for commands to gather information from
+		// all of the connections
+		if (message instanceof BytesMessage) {
+			try {
+				BytesMessage bytesMessage = (BytesMessage) message;
+				byte command = bytesMessage.readByte();
+
+				if (command == 1) {
+					TextMessage textMessage = null;
+					String[] stats = getAdvisorStats();
+
+					for (int i = 0; i < stats.length; i++) {
+						if (stats[i] != null) {
+							textMessage = session.createTextMessage(stats[i]);
+							messageProducer.send(textMessage);
+							System.out.println("Request Message Info Sent.");
+						}
+					}
+				}
+			} catch (JMSException err) {
+				String error = "Caught receiving advisor message:\n\n" + err + "\n";
+				error += err.getStackTrace();
+				displayMessageDialog(error, "Error");
+			}
+
 		}
 	}
 }
