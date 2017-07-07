@@ -40,7 +40,7 @@ public class ActiveMQProducer implements Runnable, Producer {
 		this.destinationName = destinationName;
 		this.useTopics = useTopics;
 	}
-	
+
 	/**
 	 * This method returns the ClientID of the ActiveMQProducer as a way to
 	 * identify the connection.
@@ -98,7 +98,7 @@ public class ActiveMQProducer implements Runnable, Producer {
 
 			// Create a MessageProducer to send messages to
 			messageProducer = session.createProducer(destination);
-			
+
 			// Start the connection
 			connection.start();
 			time = new TimeKeeper();
